@@ -98,7 +98,7 @@ class TrainerM:
                 filehandle.write(f'End epoch: {epoch + 1}, elapsed time: {end_epoch - start_epoch} \n')
 
         end_train = time()
-        print(f'End training phase. Elapsed time: {end_train - start_train}')
+        print(f'End training phase. Elapsed time: {end_train - start_train} \n')
 
         with open(self.log_file_path, 'a') as filehandle:
             filehandle.write(f'End training phase. Elapsed time: {end_train - start_train} \n')

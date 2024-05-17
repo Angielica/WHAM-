@@ -25,7 +25,7 @@ def plot_clusters(seqs, labels, params):
                 cluster.append(seqs[i])
         if len(cluster) > 0:
             axs[row_i, column_j].plot(np.average(np.vstack(cluster), axis=0), c="red")
-        axs[row_i, column_j].set_title("Cluster " + str(label))
+        axs[row_i, column_j].set_title("Cl " + str(label))
 
         column_j += 1
 

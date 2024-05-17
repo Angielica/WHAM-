@@ -15,14 +15,14 @@ from kneed import KneeLocator
 def find_num_clusters(sequences, params):
     range_n_clusters = list(x for x in range(8, 20))
     sse = []
-    seed = params['SEED']
+    seed = params['seed']
     log_file_path = params['log_path']
     start_time = time.time()
 
     with open(log_file_path, 'a') as filehandle:
-        filehandle.write('Start searching optimal number of clusters')
+        filehandle.write('Start searching optimal number of clusters \n')
 
-    print("Start searching optimal number of clusters")
+    print("Start searching optimal number of clusters \n")
 
     for num_clusters in range_n_clusters:
         km = TimeSeriesKMeans(n_clusters=num_clusters, metric="dtw", random_state=seed)
@@ -33,9 +33,9 @@ def find_num_clusters(sequences, params):
         sse.append(inertia)
 
         with open(log_file_path, 'a') as filehandle:
-            filehandle.write("Per n_clusters = {0}, il coefficiente di inertia è pari a {1}".format(num_clusters, inertia))
+            filehandle.write("Per n_clusters = {0}, il coefficiente di inertia è pari a {1} \n".format(num_clusters, inertia))
 
-        print("Per n_clusters = {0}, il coefficiente di inertia è pari a {1}".format(num_clusters, inertia))
+        print("Per n_clusters = {0}, il coefficiente di inertia è pari a {1} \n".format(num_clusters, inertia))
 
     plt.style.use("fivethirtyeight")
     plt.plot(range(8, 20), sse)
@@ -51,18 +51,18 @@ def find_num_clusters(sequences, params):
     end_time = time.time() - start_time
 
     with open(log_file_path, 'a') as filehandle:
-        filehandle.write(f"End searching optimal number of clusters {end_time}")
-        filehandle.write(f"Optimal number of clusters: {cluster_count}")
+        filehandle.write(f"End searching optimal number of clusters {end_time} \n")
+        filehandle.write(f"Optimal number of clusters: {cluster_count} \n")
 
-    print(f"End searching optimal number of clusters {end_time}")
-    print(f"Optimal number of clusters: {cluster_count}")
+    print(f"End searching optimal number of clusters {end_time} \n")
+    print(f"Optimal number of clusters: {cluster_count} \n")
 
     return cluster_count
 
 
 def create_clusters(sequences, cluster_count, params):
     path_distribution = params['plot_cluster_distribution_path']
-    path_clusters = params['path_clusters_path']
+    path_clusters = params['plot_clusters_path']
     seed = params['seed']
 
     km = TimeSeriesKMeans(n_clusters=cluster_count, metric="dtw", random_state=seed)
@@ -158,11 +158,16 @@ def create_list_index(cluster_c, dend, params):
             idx_val.append(int(el))
 
     with open(log_file_path, 'a') as filehandle:
-        filehandle.write(f"Number of elements in training set M: {tot_train}")
-        filehandle.write(f"Number of elements in validation set M: {total-tot_train}")
+        filehandle.write(f"Number of elements in training set M: {tot_train} \n")
+        filehandle.write(f"Number of elements in validation set M: {total-tot_train} \n")
+        filehandle.write(f"Clusters in training set: {idx_train} \n")
+        filehandle.write(f"Clusters in validation set: {idx_val} \n")
 
-    print("Number of elements in training set M:", tot_train)
-    print("Number of elements in validation set M:", total - tot_train)
+    print("Number of elements in training set M:", tot_train, "\n")
+    print("Number of elements in validation set M:", total - tot_train, "\n")
+
+    print("Clusters in training set", idx_train)
+    print("Clusters in validation set", idx_val)
 
     return idx_train, idx_val
 

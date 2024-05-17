@@ -115,7 +115,7 @@ class Trainer:
 
             loss_values.append(epoch_loss / count)
 
-            print(f"Epoch [{epoch + 1}/{n_epochs}], epoch_loss/len(train_loader): "f"{(epoch_loss / len(train_loader)):.8f}")
+            print(f"Epoch [{epoch + 1}/{n_epochs}], epoch_loss/len(train_loader): "f"{(epoch_loss / len(train_loader)):.8f} \n")
 
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f"[TRAIN] Epoch [{epoch + 1}/{n_epochs}], epoch_loss/len(train_loader): "f"{(epoch_loss / len(train_loader)):.8f} \n")
@@ -127,13 +127,13 @@ class Trainer:
                 best_loss = avg_eval_loss
                 torch.save(self.generator.state_dict(), self.params["BEST_PATH_GEN"])
 
-            print(f"Epoch [{epoch + 1}/{n_epochs}], Eval Loss on val set: {avg_eval_loss:.8f}")
+            print(f"Epoch [{epoch + 1}/{n_epochs}], Eval Loss on val set: {avg_eval_loss:.8f} \n")
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f"[VAL] Epoch [{epoch + 1}/{n_epochs}], Eval Loss on val set: {avg_eval_loss:.8f} \n")
 
 
             end_epoch = time()
-            print(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch}')
+            print(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch} \n')
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch} \n')
 
