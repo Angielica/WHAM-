@@ -22,6 +22,8 @@ def get_data(params):
         df, params = get_smart_home_data(params)
     elif dataset_name == 'agricultural':
         df, params = get_agricultural_data(params)
+    elif dataset_name == 'head_posture':
+        df, params = get_head_posture_data(params)
     else:
         print('Unknown dataset')
         sys.exit(0)
@@ -98,6 +100,16 @@ def get_agricultural_data(params):
 
     return df, params
 
+def get_head_posture_data(params):
+    path_df = params['dataset_path']
+    df = pd.read_csv(path_df)
+    df.drop(columns=['Miscare', 'Time'], inplace=True)
+    df.dropna(inplace=True)
+    df.drop_duplicates(inplace=True)
+
+    params['n_feats'] = df.shape[1]
+
+    return df, params
 
 
 
