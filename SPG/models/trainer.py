@@ -3,7 +3,7 @@ import torch
 
 from time import time
 
-from utility.plotter import plot_loss, plot_loss_log
+from utility.plotter import plot_loss_training, plot_loss_training_log
 
 
 class Trainer:
@@ -120,17 +120,9 @@ class Trainer:
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f"[TRAIN] Epoch [{epoch + 1}/{n_epochs}], epoch_loss/len(train_loader): "f"{(epoch_loss / len(train_loader)):.8f} \n")
 
-            avg_eval_loss = self.evaluate(train_loader)
-            val_loss_values.append(avg_eval_loss)
-
-            if avg_eval_loss < best_loss:
-                best_loss = avg_eval_loss
+            if loss_values[-1] < best_loss:
+                best_loss = loss_values[-1]
                 torch.save(self.generator.state_dict(), self.params["BEST_PATH_GEN"])
-
-            print(f"Epoch [{epoch + 1}/{n_epochs}], Eval Loss on val set: {avg_eval_loss:.8f} \n")
-            with open(self.log_file_path, 'a') as filehandle:
-                filehandle.write(f"[VAL] Epoch [{epoch + 1}/{n_epochs}], Eval Loss on val set: {avg_eval_loss:.8f} \n")
-
 
             end_epoch = time()
             print(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch} \n')
@@ -144,5 +136,5 @@ class Trainer:
 
         torch.save(self.generator.state_dict(), self.params["LAST_PATH_GEN"])
 
-        plot_loss(loss_values, val_loss_values, self.params["plot_path_loss_g"])
-        plot_loss_log(loss_values, val_loss_values, self.params["plot_path_log_loss_g"])
+        plot_loss_training(loss_values, self.params["plot_path_loss_g"])
+        plot_loss_training_log(loss_values, self.params["plot_path_log_loss_g"])
