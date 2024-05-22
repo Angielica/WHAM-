@@ -13,7 +13,8 @@ from kneed import KneeLocator
 
 
 def find_num_clusters(sequences, params):
-    range_n_clusters = list(x for x in range(8, 20))
+    max = math.ceil(math.sqrt(len(sequences))) 
+    range_n_clusters = list(x for x in range(8, max))
     sse = []
     seed = params['seed']
     log_file_path = params['log_path']
@@ -38,13 +39,13 @@ def find_num_clusters(sequences, params):
         print("Per n_clusters = {0}, il coefficiente di inertia è pari a {1} \n".format(num_clusters, inertia))
 
     plt.style.use("fivethirtyeight")
-    plt.plot(range(8, 20), sse)
-    plt.xticks(range(8, 20))
+    plt.plot(range(8, max), sse)
+    plt.xticks(range(8, max))
     plt.xlabel("Number of Clusters")
     plt.ylabel("SSE")
     plt.show()
 
-    kl = KneeLocator(range(8, 20), sse, curve="convex", direction="decreasing")
+    kl = KneeLocator(range(8, max), sse, curve="convex", direction="decreasing")
 
     cluster_count = kl.elbow
 
