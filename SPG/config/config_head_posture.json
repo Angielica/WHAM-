@@ -23,6 +23,7 @@
   "n_epochs_g": 500,
   "train_m": 1,
   "train_g": 0,
+  "test": 0,
   "clustering": 1,
   "n_gpu": "0"
 }

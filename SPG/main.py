@@ -1,6 +1,6 @@
 import json
 import sys
-
+import glob
 import os
 
 import torch
@@ -91,56 +91,78 @@ def main(fname):
         dataloader_g, train_loader_m, val_loader_m, train_loader_g, val_loader_g, params = get_data(params)
 
         # train Model M
-        model_m = Model(params['n_feats'], params['n_feats'], embed_dim_m, num_heads_m, num_layers_m).to(device)
-
-        trainer_m = TrainerM(model_m, params)
         if params['train_m']:
+            model_m = Model(params['n_feats'], params['n_feats'], embed_dim_m, num_heads_m, num_layers_m).to(device)
+
+            trainer_m = TrainerM(model_m, params)
             trainer_m.train(train_loader_m, val_loader_m)
 
-        # train Generator G
-        generator = Generator(params['n_feats'], params['n_feats'], embed_dim_g, num_heads_g, num_layers_g).to(device)
-
-        model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
-        model_m = model_m.to(device)
-
-        trainer = Trainer(generator, model_m, params)
         if params['train_g']:
+            # train Generator G
+            generator = Generator(params['n_feats'], params['n_feats'], embed_dim_g, num_heads_g, num_layers_g).to(
+                device)
+
+            model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
+            model_m = model_m.to(device)
+
+            trainer = Trainer(generator, model_m, params)
             trainer.train(dataloader_g)
 
-        # test model
-        path_y_prediction_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_train_{exp}.dat')
-        path_y_prediction_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_val_{exp}.dat')
-        params['path_y_prediction_train'] = path_y_prediction_train
-        params['path_y_prediction_val'] = path_y_prediction_val
+        if params['test']:
+            model_m = Model(params['n_feats'], params['n_feats'], embed_dim_m, num_heads_m, num_layers_m).to(device)
+            generator = Generator(params['n_feats'], params['n_feats'], embed_dim_g, num_heads_g, num_layers_g).to(
+                device)
 
-        model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
-        model_m = model_m.to(device)
+            # test model
+            path_y_prediction_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_train_{exp}.dat')
+            path_y_prediction_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_val_{exp}.dat')
+            params['path_y_prediction_train'] = path_y_prediction_train
+            params['path_y_prediction_val'] = path_y_prediction_val
 
-        generator.load_state_dict(torch.load(params["BEST_PATH_GEN"]))
-        generator = generator.to(device)
+            model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
+            model_m = model_m.to(device)
 
-        test(params, trainer, generator, model_m, train_loader_g, val_loader_g)
+            generator.load_state_dict(torch.load(params["BEST_PATH_GEN"]))
+            generator = generator.to(device)
 
-        # statistics
-        path_out_log_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_{exp}.pdf')
-        path_out_log_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_{exp}.pdf')
+            test(params, trainer, generator, model_m, train_loader_g, val_loader_g)
 
-        path_out_log_train_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_smooth_{exp}.pdf')
-        path_out_log_val_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_smooth_{exp}.pdf')
+            # statistics
+            path_out_log_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_{exp}.pdf')
+            path_out_log_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_{exp}.pdf')
 
-        params['path_out_log_train'] = path_out_log_train
-        params['path_out_log_val'] = path_out_log_val
-        params['path_out_log_train_smooth'] = path_out_log_train_smooth
-        params['path_out_log_val_smooth'] = path_out_log_val_smooth
+            path_out_log_train_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_smooth_{exp}.pdf')
+            path_out_log_val_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_smooth_{exp}.pdf')
 
-        count_train, count_val = statistics(params)
+            params['path_out_log_train'] = path_out_log_train
+            params['path_out_log_val'] = path_out_log_val
+            params['path_out_log_train_smooth'] = path_out_log_train_smooth
+            params['path_out_log_val_smooth'] = path_out_log_val_smooth
 
-        with open(file_path, 'a') as filehandle:
-            filehandle.write(f'Copy in train: {count_train}, in val: {count_val}')
+            count_train, count_val = statistics(params)
+
+            with open(file_path, 'a') as filehandle:
+                filehandle.write(f'Copy in train: {count_train}, in val: {count_val}')
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    all = int(sys.argv[2])
+    if all == 0:
+        main(sys.argv[1])
+    elif all == 1:
+        directory_json = "config_1/"
+        files = glob.glob(directory_json + "*.json")
+        for file in files:
+            main(file)
+    elif all == 2:
+        directory_json = "config_2/"
+        files = glob.glob(directory_json + "*.json")
+        for file in files:
+            main(file)
+    else:
+        print('No config files found')
+        sys.exit(0)
+
 
 
 
