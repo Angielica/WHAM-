@@ -4,6 +4,7 @@ import torch
 from time import time
 
 from utility.plotter import plot_loss_training, plot_loss_training_log
+from utility.utils import EarlyStopper
 
 
 class Trainer:
@@ -85,12 +86,14 @@ class Trainer:
 
         return avg_loss_test, y_pred, y_true, x_pred, x_true
 
-    def train(self, train_loader):
+    def train(self, train_loader, early_stop=True):
         self.model.eval()
         n_epochs = self.params["n_epochs_g"]
 
+        early_stopped = False
+        early_stopper = EarlyStopper(patience=30, min_delta=0.0001)
+
         loss_values = []
-        val_loss_values = []
         best_loss = np.Inf
 
         start_train = time()
@@ -120,14 +123,27 @@ class Trainer:
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f"[TRAIN] Epoch [{epoch + 1}/{n_epochs}], epoch_loss/len(train_loader): "f"{(epoch_loss / len(train_loader)):.8f} \n")
 
-            if loss_values[-1] < best_loss:
-                best_loss = loss_values[-1]
+            current_loss = loss_values[-1]
+
+            if current_loss < best_loss:
+                best_loss = current_loss
                 torch.save(self.generator.state_dict(), self.params["BEST_PATH_GEN"])
 
             end_epoch = time()
             print(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch} \n')
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch} \n')
+
+            if early_stop and early_stopper.early_stop(current_loss):
+                early_stopped = True
+                break
+
+        if early_stopped:
+            print('Early stopping')
+
+            with open(self.log_file_path, 'a') as filehandle:
+                filehandle.write(f'Early stopping')
+
 
         end_train = time()
         print(f'End training phase. Elapsed time: {end_train - start_train}')

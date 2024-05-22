@@ -2,6 +2,68 @@ import pickle
 import matplotlib.pyplot as plt
 import numpy as np
 from kneed import KneeLocator
+from scipy.signal import savgol_filter
+from kneebow.rotor import Rotor
+
+def find_elbow(data):
+    rotor = Rotor()
+    rotor.fit_rotate(data)
+
+    return rotor.get_elbow_index()
+
+
+def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
+    error = (y_pred - y_true) ** 2
+    error = error.sum(dim=-1)
+    error = error.sum(dim=-1)
+    error = error.clone().detach().cpu().numpy()
+
+    error = np.array(list(zip(range(len(error)), error)))
+    count, idx = 0, 0
+
+    y = sorted(error[:, 1], reverse=True)
+    x = range(0, len(error))
+
+    window_size = max(5, len(y) // 5)
+
+    polynomial_order = 2
+    smoothed_y = savgol_filter(y, window_size, polynomial_order)
+
+    if train:
+        y1 = np.diff(smoothed_y) / np.diff(x)
+        y2 = np.diff(y1) / np.diff(x)[:-1]
+
+        # searching the inflection point
+        idx = np.abs(y2).argmin()
+        right_x = x[idx:]
+        right_y = smoothed_y[idx:]
+
+        right_elbow = find_elbow(np.array(list(zip(right_x, -right_y))))
+        high_thr_x = x[right_elbow + idx]
+        high_thr_y = y[right_elbow + idx]
+
+        threshold = high_thr_y
+
+    count = len(np.where(error[:, 1] < threshold)[0])
+
+    plt.figure()
+    plt.grid()
+    plt.yscale("log")
+    plt.title("Evaluation: reconstruction error")
+    plt.plot(range(0, len(error)), threshold * np.ones(len(error)), color='red')
+    plt.plot(range(0, len(error)), sorted(error[:, 1], reverse=True), color='blue')
+    plt.savefig(path_err)
+    plt.show()
+
+    plt.figure()
+    plt.grid()
+    plt.yscale("log")
+    plt.title("Evaluation: smooth reconstruction error")
+    plt.plot(range(0, len(error)), threshold * np.ones(len(error)), color='red')
+    plt.plot(range(0, len(error)), smoothed_y, color='orange')
+    plt.savefig(path_smooth)
+    plt.show()
+    return count, threshold
 
 
 def find_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
@@ -24,13 +86,13 @@ def find_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
     # print("threshold", threshold)
     # th = threshold * np.ones(len(error))
     
-    for err in error:
-        if err[-1] >= threshold:
-            count += 1
-            tmp_error = ((x_pred[idx] - x_true[idx]) ** 2).sum(dim=-1)
-            tmp_error = tmp_error.sum(dim=-1)
-            error_x.append(tmp_error)
-        idx += 1
+    # for err in error:
+    #     if err[-1] >= threshold:
+    #         count += 1
+    #         tmp_error = ((x_pred[idx] - x_true[idx]) ** 2).sum(dim=-1)
+    #         tmp_error = tmp_error.sum(dim=-1)
+    #         error_x.append(tmp_error)
+    #     idx += 1
 
     error = sorted(error, key=lambda a: a[1])
     error = np.array(error)
@@ -66,11 +128,90 @@ def find_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
     return count, error_x, th
 
 
+def find_k_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
+    # print(y_pred.shape)
+    # print(x_pred.shape)
+    error = (y_pred - y_true) ** 2
+    error = error.sum(dim=-1)
+    error = error.sum(dim=-1)
+    error = error.clone().detach().cpu().numpy()
+
+    error = np.array(list(zip(range(len(error)), error)))
+    count, idx = 0, 0
+    error_x = []
+
+    # print("threshold", threshold)
+    # th = threshold * np.ones(len(error))
+
+    # for err in error:
+    #     if err[-1] >= threshold:
+    #         count += 1
+    #         tmp_error = ((x_pred[idx] - x_true[idx]) ** 2).sum(dim=-1)
+    #         tmp_error = tmp_error.sum(dim=-1)
+    #         error_x.append(tmp_error)
+    #     idx += 1
+
+    error = sorted(error, key=lambda a: a[1])
+    error = np.array(error)
+
+    # print(error[:10])
+    # tmp_true = y_true[error[:2,0]][0][0]
+    # tmp_pred = y_pred[error[:2,0]][0][0]
+
+    th_vec = []
+    count_train = []
+    count_val = []
+    if train:
+        threshold = sorted(error[:, 1], reverse=True)
+        for k in range(1, 15):
+            th = threshold[-k]
+            if k == 1:
+                th_vec.append(th)
+            elif th != th_vec[k - 2]:
+                th_vec.append(th)
+            else:
+                count_train.pop()
+            count_train.append(k)
+        print(f"count train : {count_train}")
+        count = count_train
+    else:
+        for th in threshold:
+            count = 0
+            sort = sorted(error[:, 1], reverse=True)
+            for err in sort:
+                if err <= th:
+                    count += 1
+            count_val.append(count)
+        print(f"count val : {count_val}")
+        count = count_val
+
+    print("threshold", th_vec)
+
+
+
+    # print("y true\n", y_true[error[:2,0]][0][0][:10])
+    # print("y pred\n", y_pred[error[:2,0]][0][0][:10])
+    # print(((tmp_true - tmp_pred)**2).sum())
+
+    plt.figure()
+    plt.grid()
+    plt.yscale("log")
+    plt.plot(range(0, len(error)), th * np.ones(len(error)), color='red')
+    plt.plot(range(0, len(error)), sorted(error[:, 1], reverse=True), color='blue')
+
+    # plt.axvline(threshold, ymin=min(sorted(error[:, 1], reverse=True)), ymax=max(sorted(error[:, 1], reverse=True)))
+    plt.savefig(path)
+
+    return count, error_x, th_vec
+
+
 def statistics(params):
     path_pred_train = params['path_y_prediction_train']
     path_pred_val = params['path_y_prediction_val']
     path_saved_train = params['path_out_log_train']
     path_saved_val = params['path_out_log_val']
+    path_saved_train_smooth = params['path_out_log_train_smooth']
+    path_saved_val_smooth = params['path_out_log_val_smooth']
     log_file_path = params['log_path']
 
     with open(path_pred_train, "rb") as f:
@@ -82,14 +223,12 @@ def statistics(params):
     # train
     train = 1
     threshold = 0
-    count_train, error_x_train, threshold = find_copy(y_pred_t, y_true_t, x_pred_t, x_true_t, train, threshold,
-                                                      path_saved_train)
+    count_train, threshold = find_copy_on_y(y_pred_t, y_true_t, train, threshold, path_saved_train, path_saved_train_smooth)
     print(f"Count copy find in training set: {count_train} \n")
 
     # val
     train = 0
-    count_val, error_x_val, threshold = find_copy(y_pred_v, y_true_v, x_pred_v, x_true_v, train, threshold,
-                                                  path_saved_val)
+    count_val, threshold = find_copy_on_y(y_pred_v, y_true_v, train, threshold, path_saved_val, path_saved_val_smooth)
     print(f"Count copy find in validation set: {count_val} \n")
 
     with open(log_file_path, 'a') as filehandle:

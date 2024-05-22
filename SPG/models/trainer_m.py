@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from utility.plotter import plot_loss, plot_loss_log
+from utility.utils import EarlyStopper
 
 from time import time
 
@@ -43,11 +44,14 @@ class TrainerM:
         avg_eval_loss = eval_loss / count
         return avg_eval_loss
 
-    def train(self, train_loader, val_loader):
+    def train(self, train_loader, val_loader, early_stop=True):
         n_epochs = self.params["n_epochs_m"]
         loss_values = []
         val_loss_values = []
         best_loss = np.Inf
+
+        early_stopped = False
+        early_stopper = EarlyStopper(patience=30, min_delta=0.0001)
 
         start_train = time()
 
@@ -96,6 +100,16 @@ class TrainerM:
 
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f'End epoch: {epoch + 1}, elapsed time: {end_epoch - start_epoch} \n')
+
+            if early_stop and early_stopper.early_stop(avg_eval_loss):
+                early_stopped = True
+                break
+
+        if early_stopped:
+            print('Early stopping')
+
+            with open(self.log_file_path, 'a') as filehandle:
+                filehandle.write(f'Early stopping')
 
         end_train = time()
         print(f'End training phase. Elapsed time: {end_train - start_train} \n')

@@ -125,8 +125,13 @@ def main(fname):
         path_out_log_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_{exp}.pdf')
         path_out_log_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_{exp}.pdf')
 
+        path_out_log_train_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_smooth_{exp}.pdf')
+        path_out_log_val_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_smooth_{exp}.pdf')
+
         params['path_out_log_train'] = path_out_log_train
         params['path_out_log_val'] = path_out_log_val
+        params['path_out_log_train_smooth'] = path_out_log_train_smooth
+        params['path_out_log_val_smooth'] = path_out_log_val_smooth
 
         count_train, count_val = statistics(params)
 
