@@ -42,8 +42,12 @@ def main(fname):
     if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'statistics')):
         os.mkdir(os.path.join(params["SAVE_FOLDER"], 'statistics'))
 
+    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'clustering', 'data')):
+        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'clustering', 'data'))
+
     for i in range(params['n_runs']):
         dataset_name = params['dataset_name']
+        print(f'Dataset: {dataset_name}')
         params['seed'] = init_seed + i
 
         seed = params['seed']
@@ -62,7 +66,9 @@ def main(fname):
 
         exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}'
         file_path = f'saved/results/log_{exp}.txt'
-        open(file_path, 'w').close()
+
+        if params['train_m']:
+            open(file_path, 'w').close()
         params['log_path'] = file_path
 
         best_path_mod, last_path_mod = f"AI_best_model_{exp}.pt", f"AI_last_model_{exp}.pt"
@@ -77,11 +83,13 @@ def main(fname):
         plot_path_log_loss_g = f'loss_log_generator_{exp}.pdf'
         plot_path_loss_m = f'loss_AI_{exp}.pdf'
         plot_path_log_loss_m = f'loss_log_AI_{exp}.pdf'
+        idx_clustering_path = f'idx_clustering_{exp}.dat'
 
         params["plot_path_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_loss_g)
         params["plot_path_log_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_log_loss_g)
         params["plot_path_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_loss_m)
         params["plot_path_log_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_log_loss_m)
+        params['idx_clustering_path'] = os.path.join(params['SAVE_FOLDER'], 'clustering', 'data', idx_clustering_path)
 
         tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}\n'
 
@@ -98,6 +106,7 @@ def main(fname):
             trainer_m.train(train_loader_m, val_loader_m)
 
         if params['train_g']:
+            model_m = Model(params['n_feats'], params['n_feats'], embed_dim_m, num_heads_m, num_layers_m).to(device)
             # train Generator G
             generator = Generator(params['n_feats'], params['n_feats'], embed_dim_g, num_heads_g, num_layers_g).to(
                 device)
@@ -125,7 +134,7 @@ def main(fname):
             generator.load_state_dict(torch.load(params["BEST_PATH_GEN"]))
             generator = generator.to(device)
 
-            test(params, trainer, generator, model_m, train_loader_g, val_loader_g)
+            test(params, generator, model_m, train_loader_g, val_loader_g)
 
             # statistics
             path_out_log_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_{exp}.pdf')
@@ -147,15 +156,15 @@ def main(fname):
 
 if __name__ == '__main__':
     all = int(sys.argv[2])
-    if all == 0:
+    if all == 2:
         main(sys.argv[1])
-    elif all == 1:
-        directory_json = "config_1/"
+    elif all == 0:
+        directory_json = "config_0/"
         files = glob.glob(directory_json + "*.json")
         for file in files:
             main(file)
-    elif all == 2:
-        directory_json = "config_2/"
+    elif all == 1:
+        directory_json = "config_1/"
         files = glob.glob(directory_json + "*.json")
         for file in files:
             main(file)

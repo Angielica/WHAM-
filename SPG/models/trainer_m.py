@@ -55,9 +55,10 @@ class TrainerM:
 
         start_train = time()
 
-        with open(self.log_file_path, 'a') as filehandle:
-            filehandle.write(f'Training model M. Starting time: {start_train}')
+        print(f'Training model M. Starting time: {start_train} \n')
 
+        with open(self.log_file_path, 'a') as filehandle:
+            filehandle.write(f'Training model M. Starting time: {start_train} \n')
 
         for epoch in range(n_epochs):
             start_epoch = time()
@@ -106,10 +107,10 @@ class TrainerM:
                 break
 
         if early_stopped:
-            print('Early stopping')
+            print('Early stopping \n')
 
             with open(self.log_file_path, 'a') as filehandle:
-                filehandle.write(f'Early stopping')
+                filehandle.write(f'Early stopping \n')
 
         end_train = time()
         print(f'End training phase. Elapsed time: {end_train - start_train} \n')

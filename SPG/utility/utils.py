@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 
 from utility.clustering import final_clusters, create_list_index
+import pickle
 
 import torch
 from torch.utils.data import TensorDataset, DataLoader
@@ -25,6 +26,10 @@ def create_sequences(df, seq_len=60):
 def create_clusters(seqs, params):
     labels, cluster_c, dend = final_clusters(seqs, params)
     idx_train, idx_val = create_list_index(cluster_c, dend, params)
+
+    with open(params['idx_clustering_path'], "wb") as f:
+        pickle.dump((labels, idx_train, idx_val), f)
+
     return labels, idx_train, idx_val
 
 def create_train_val_sets(seqs, params):
@@ -36,7 +41,11 @@ def create_train_val_sets(seqs, params):
     clustering = params['clustering']
 
     if clustering:
-        labels, idx_train, idx_val = create_clusters(seqs, params)
+        if params['train_m']:
+            labels, idx_train, idx_val = create_clusters(seqs, params)
+        else:
+            with open(params['idx_clustering_path'], "rb") as f:
+                labels, idx_train, idx_val = pickle.load(f)
 
         train_m_idxs, val_m_idxs = [], []
 
