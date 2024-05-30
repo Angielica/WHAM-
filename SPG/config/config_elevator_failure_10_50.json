@@ -1,10 +1,10 @@
 {
-  "dataset_name": "agricultural",
-  "dataset_path": "./data/agricultural.csv",
+  "dataset_name": "elevator_failure",
+  "dataset_path": "./data/elevator_failure.csv",
   "seq_len": 60,
   "seed": 42,
   "perc_split_m": 0.5,
-  "split_train": 0.5,
+  "split_train": 0.1,
   "split_val": 0.5,
   "n_clusters": 10,
   "embed_dim_m": 512,

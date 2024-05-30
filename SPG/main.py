@@ -12,6 +12,7 @@ from models.generator import Generator
 from models.model import Model
 from utility.statistics import statistics
 from utility.test import test
+from utility.utils import set_reproducibility
 def main(fname):
     with open(fname) as fp:
         params = json.load(fp)
@@ -51,6 +52,9 @@ def main(fname):
         params['seed'] = init_seed + i
 
         seed = params['seed']
+
+        set_reproducibility(seed)
+
         params['plot_clusters_path'] = os.path.join(params["SAVE_FOLDER"], 'clustering',
                                                     f'clusters_run_{i}_{seed}_{dataset_name}.pdf')
         params['plot_cluster_distribution_path'] = os.path.join(params["SAVE_FOLDER"], 'clustering',
@@ -159,7 +163,7 @@ if __name__ == '__main__':
     if all == 2:
         main(sys.argv[1])
     elif all == 0:
-        directory_json = "config_0/"
+        directory_json = "config/"
         files = glob.glob(directory_json + "*.json")
         for file in files:
             main(file)

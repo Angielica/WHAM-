@@ -9,6 +9,18 @@ import pickle
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
+import random
+
+
+def set_reproducibility(seed):
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.use_deterministic_algorithms = True
+    torch.backends.cudnn.benchmark = False
+
 
 def create_sequences(df, seq_len=60):
     n_feats = df.shape[1]
