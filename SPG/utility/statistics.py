@@ -14,8 +14,25 @@ def find_elbow(data):
 
     return rotor.get_elbow_index()
 
+def find_low_k_copy(y_pred, y_true, labels, K=5):
+    error = (y_pred - y_true) ** 2
+    error = error.sum(dim=-1)
+    error = error.sum(dim=-1)
+    error = error.clone().detach().cpu().numpy()
 
-def find_copy_on_y_all(y_pred, y_true, labels, threshold, path_err, path_smooth):
+    error_list = list(zip(list(range(len(error))), error, labels.tolist()))
+
+    error_sorted = sorted(error_list, key=itemgetter(1), reverse=True)
+    error_sorted = np.array(error_sorted)
+
+    copy = error_sorted[:K]
+
+    count_train = len(np.where(copy[:, 2] == 1.)[0])
+    count_val = len(copy) - count_train
+
+    return count_train, count_val
+
+def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth):
     error = (y_pred - y_true) ** 2
     error = error.sum(dim=-1)
     error = error.sum(dim=-1)
@@ -316,8 +333,11 @@ def statistics_all(params):
     print(f'Shape y (G): {y_true_t.shape}')
     print(f'shape D+: {shape_train}, shape D-: {shape_val}')
 
-    threshold = 0
-    count_train, count_val, threshold = find_copy_on_y_all(y_pred_t, y_true_t, labels, threshold, path_saved_g, path_saved_g_smooth)
+    if params['compute_elbow_metric']:
+        count_train, count_val, threshold = find_copy_on_y_all(y_pred_t, y_true_t, labels, path_saved_g, path_saved_g_smooth)
+    else:
+        count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=params['k'])
+
     print(f"Count copy find in training set: {count_train} \n")
     print(f"Count copy find in validation set: {count_val} \n")
 
