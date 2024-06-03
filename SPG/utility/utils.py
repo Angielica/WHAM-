@@ -81,14 +81,22 @@ def create_train_val_sets(seqs, params):
     _, train_g = train_test_split(train_m, test_size=perc_train_split_g, random_state=seed)
     _, val_g = train_test_split(val_m, test_size=perc_val_split_g, random_state=seed)
 
+    labels_train_g = np.ones(train_g.shape[0])
+    labels_val_g = -1 * np.ones(val_g.shape[0])
+
     all_g = np.concatenate((train_g, val_g))
-    all_g = shuffle(all_g, random_state=seed)
+    all_labels_g = np.concatenate((labels_train_g, labels_val_g))
+
+    temp = list(zip(all_g, all_labels_g))
+    temp = shuffle(temp, random_state=seed)
+    all_g, all_labels_g = zip(*temp)
 
     train_m, val_m = torch.Tensor(train_m), torch.Tensor(val_m)
     all_g = torch.Tensor(all_g)
+    all_labels_g = torch.Tensor(all_labels_g)
     train_g, val_g = torch.Tensor(train_g), torch.Tensor(val_g)
 
-    return train_m, val_m, all_g, train_g, val_g
+    return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
 
 def split_sequence(seqs, ratio=.5):
@@ -132,7 +140,7 @@ def split_sequence(seqs, ratio=.5):
 
 def get_dataloaders(df, params):
     sequences, n_feats = create_sequences(df, params['seq_len'])
-    train_m, val_m, all_g, train_g, val_g = create_train_val_sets(sequences, params)
+    train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets(sequences, params)
 
     x_train_g, y_shift_train_g, y_train_g = split_sequence(all_g)
 
@@ -142,7 +150,7 @@ def get_dataloaders(df, params):
     x_train_g_test, y_shift_train_g_test, y_train_g_test = split_sequence(train_g)
     x_val_g_test, y_shift_val_g_test, y_val_g_test = split_sequence(val_g)
 
-    dataset_g = TensorDataset(y_train_g, x_train_g, y_shift_train_g, y_train_g)
+    dataset_g = TensorDataset(y_train_g, x_train_g, y_shift_train_g, y_train_g, all_labels_g)
     train_dataset_m = TensorDataset(x_train_m, y_shift_train_m, y_train_m)
     val_dataset_m = TensorDataset(x_val_m, y_shift_val_m, y_val_m)
     train_dataset_g = TensorDataset(y_train_g_test, x_train_g_test, y_shift_train_g_test, y_train_g_test)

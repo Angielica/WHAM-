@@ -38,7 +38,7 @@ class Trainer:
         eval_loss = 0.0
         count = 0
         with torch.no_grad():
-            for x_g, y_shift_g, y_shift_m, y_m in val_loader:
+            for x_g, y_shift_g, y_shift_m, y_m, _ in val_loader:
 
                 x_g, y_shift_g = x_g.to(self.device), y_shift_g.to(self.device)
                 y_shift_m, y_m = y_shift_m.to(self.device), y_m.to(self.device)
@@ -59,7 +59,7 @@ class Trainer:
         test_loss = 0.0
         count = 0
         with torch.no_grad():
-            for x_g, y_shift_g, y_shift_m, y_m in test_loader:
+            for x_g, y_shift_g, y_shift_m, y_m, _ in test_loader:
 
                 x_g, y_shift_g = x_g.to(self.device), y_shift_g.to(self.device)
                 y_shift_m, y_m = y_shift_m.to(self.device), y_m.to(self.device)
@@ -108,7 +108,7 @@ class Trainer:
             self.generator.train()
             epoch_loss = 0.0
             count = 0
-            for x_g, y_shift_g, y_shift_m, y_m in train_loader:
+            for x_g, y_shift_g, y_shift_m, y_m, _ in train_loader:
 
                 x_g, y_shift_g = x_g.to(self.device), y_shift_g.to(self.device)
                 y_shift_m, y_m = y_shift_m.to(self.device), y_m.to(self.device)

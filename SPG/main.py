@@ -10,8 +10,8 @@ from models.trainer import Trainer
 from models.trainer_m import TrainerM
 from models.generator import Generator
 from models.model import Model
-from utility.statistics import statistics
-from utility.test import test
+from utility.statistics import statistics, statistics_all
+from utility.test import test, test_all
 from utility.utils import set_reproducibility
 def main(fname):
     with open(fname) as fp:
@@ -96,6 +96,7 @@ def main(fname):
         params['idx_clustering_path'] = os.path.join(params['SAVE_FOLDER'], 'clustering', 'data', idx_clustering_path)
 
         tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}\n'
+        print(tmp)
 
         with open(file_path, 'a') as filehandle:
             filehandle.write(tmp)
@@ -129,8 +130,11 @@ def main(fname):
             # test model
             path_y_prediction_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_train_{exp}.dat')
             path_y_prediction_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_val_{exp}.dat')
+            path_y_prediction_g = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_g_{exp}.dat')
+
             params['path_y_prediction_train'] = path_y_prediction_train
             params['path_y_prediction_val'] = path_y_prediction_val
+            params['path_y_prediction_g'] = path_y_prediction_g
 
             model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
             model_m = model_m.to(device)
@@ -138,27 +142,36 @@ def main(fname):
             generator.load_state_dict(torch.load(params["BEST_PATH_GEN"]))
             generator = generator.to(device)
 
-            test(params, generator, model_m, train_loader_g, val_loader_g)
+            if params['compute_prediction']:
+                # test(params, generator, model_m, train_loader_g, val_loader_g)
+                test_all(params, generator, model_m, dataloader_g)
 
             # statistics
             path_out_log_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_{exp}.pdf')
             path_out_log_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_{exp}.pdf')
+            path_out_log_g = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_g_{exp}.pdf')
 
             path_out_log_train_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_smooth_{exp}.pdf')
             path_out_log_val_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_smooth_{exp}.pdf')
+            path_out_log_g_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics',
+                                                     f'out_log_g_smooth_{exp}.pdf')
 
             params['path_out_log_train'] = path_out_log_train
             params['path_out_log_val'] = path_out_log_val
+            params['path_out_log_g'] = path_out_log_g
             params['path_out_log_train_smooth'] = path_out_log_train_smooth
             params['path_out_log_val_smooth'] = path_out_log_val_smooth
+            params['path_out_log_g_smooth'] = path_out_log_g_smooth
 
-            count_train, count_val = statistics(params)
+            # count_train, count_val = statistics(params)
+            count_train, count_val = statistics_all(params)
 
             with open(file_path, 'a') as filehandle:
                 filehandle.write(f'Copy in train: {count_train}, in val: {count_val}')
 
 
 if __name__ == '__main__':
+    '''
     all = int(sys.argv[2])
     if all == 2:
         main(sys.argv[1])
@@ -175,6 +188,8 @@ if __name__ == '__main__':
     else:
         print('No config files found')
         sys.exit(0)
+    '''
+    main(sys.argv[1])
 
 
 

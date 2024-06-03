@@ -1,6 +1,6 @@
 {
   "dataset_name": "head_posture",
-  "dataset_path": "./data/head_posture.csv",
+  "dataset_path": "SPG/data/head_posture.csv",
   "seq_len": 60,
   "seed": 42,
   "perc_split_m": 0.5,
@@ -13,7 +13,7 @@
   "embed_dim_g": 512,
   "num_heads_g": 8,
   "num_layers_g": 6,
-  "SAVE_FOLDER": "./saved",
+  "SAVE_FOLDER": "SPG/saved",
   "batch_size": 64,
   "n_runs": 1,
   "lr_generator": 0.00001,
@@ -21,9 +21,10 @@
   "clip_grad" : 0.1,
   "n_epochs_m": 1000,
   "n_epochs_g": 500,
-  "train_m": 1,
-  "train_g": 1,
+  "train_m": 0,
+  "train_g": 0,
   "test": 1,
-  "clustering": 1,
+  "compute_prediction": 1,
+  "clustering": 0,
   "n_gpu": "0"
 }
