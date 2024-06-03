@@ -21,7 +21,7 @@
   "clip_grad" : 0.1,
   "n_epochs_m": 1000,
   "n_epochs_g": 500,
-  "train_m": 1,
+  "train_m": 0,
   "train_g": 1,
   "test": 0,
   "compute_prediction": 0,

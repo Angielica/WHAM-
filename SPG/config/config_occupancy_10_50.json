@@ -25,8 +25,11 @@
   "train_g": 0,
   "test": 1,
   "compute_prediction": 1,
-  "compute_elbow_metric": 0,
-  "k": 5,
+  "compute_elbow_metric": 1,
+  "compute_stats_all": 1,
+  "compute_stats_sep": 1,
+  "compute_low_k": 1,
+  "k": 10,
   "clustering": 0,
   "n_gpu": "0"
 }

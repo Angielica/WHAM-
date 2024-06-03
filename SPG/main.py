@@ -143,7 +143,7 @@ def main(fname):
             generator = generator.to(device)
 
             if params['compute_prediction']:
-                # test(params, generator, model_m, train_loader_g, val_loader_g)
+                test(params, generator, model_m, train_loader_g, val_loader_g)
                 test_all(params, generator, model_m, dataloader_g)
 
             # statistics
@@ -163,12 +163,14 @@ def main(fname):
             params['path_out_log_val_smooth'] = path_out_log_val_smooth
             params['path_out_log_g_smooth'] = path_out_log_g_smooth
 
-            # count_train, count_val = statistics(params)
-            count_train, count_val = statistics_all(params)
-
-            with open(file_path, 'a') as filehandle:
-                filehandle.write(f'Copy in train: {count_train}, in val: {count_val}')
-
+            if params['compute_stats_all']:
+                count_train, count_val = statistics_all(params)
+                # with open(file_path, 'a') as filehandle:
+                #    filehandle.write(f'ALL G: Copy in train: {count_train}, in val: {count_val}')
+            if params['compute_stats_sep']:
+                count_train, count_val = statistics(params)
+                with open(file_path, 'a') as filehandle:
+                    filehandle.write(f'SEP G: Copy in train: {count_train}, in val: {count_val}')
 
 if __name__ == '__main__':
     '''

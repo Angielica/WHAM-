@@ -22,7 +22,7 @@ def find_low_k_copy(y_pred, y_true, labels, K=5):
 
     error_list = list(zip(list(range(len(error))), error, labels.tolist()))
 
-    error_sorted = sorted(error_list, key=itemgetter(1), reverse=True)
+    error_sorted = sorted(error_list, key=itemgetter(1))
     error_sorted = np.array(error_sorted)
 
     copy = error_sorted[:K]
@@ -38,9 +38,13 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth):
     error = error.sum(dim=-1)
     error = error.clone().detach().cpu().numpy()
 
+    print(f'Min error: {error.min()}')
+
     error_list = list(zip(list(range(len(error))), error, labels.tolist()))
     error_sorted = sorted(error_list, key=itemgetter(1), reverse=True)
     error_sorted = np.array(error_sorted)
+
+    print('Last 10 error: ', error_sorted[-10:])
 
     y = error_sorted[:, 1]
     labels = error_sorted[:, 2]
@@ -50,7 +54,6 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth):
 
     polynomial_order = 2
     smoothed_y = savgol_filter(y, window_size, polynomial_order)
-
 
     y1 = np.diff(smoothed_y) / np.diff(x)
     y2 = np.diff(y1) / np.diff(x)[:-1]
@@ -89,6 +92,8 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth):
     plt.plot(range(0, len(error_list)), smoothed_y, color='orange')
     plt.savefig(path_smooth)
     plt.show()
+
+    print(f'Threshold: {threshold}')
     return count_train, count_val, threshold
 
 
@@ -98,11 +103,15 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
     error = error.sum(dim=-1)
     error = error.clone().detach().cpu().numpy()
 
+    print(f'Min error: {error.min()}')
+
     error = np.array(list(zip(range(len(error)), error)))
     count, idx = 0, 0
 
     y = sorted(error[:, 1], reverse=True)
     x = range(0, len(error))
+
+    print('Last 10 error: ', y[-10:])
 
     window_size = max(5, len(y) // 5)
 
@@ -124,6 +133,7 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
 
         threshold = high_thr_y
 
+    copy = error[np.where(error[:, 1] < threshold)[0]]
     count = len(np.where(error[:, 1] < threshold)[0])
 
     plt.figure()
@@ -143,6 +153,9 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
     plt.plot(range(0, len(error)), smoothed_y, color='orange')
     plt.savefig(path_smooth)
     plt.show()
+
+    print(f'Threshold: {threshold}')
+    print(f'COPY: {copy}')
     return count, threshold
 
 
@@ -333,17 +346,39 @@ def statistics_all(params):
     print(f'Shape y (G): {y_true_t.shape}')
     print(f'shape D+: {shape_train}, shape D-: {shape_val}')
 
+    count_train, count_val = 0, 0
+
     if params['compute_elbow_metric']:
         count_train, count_val, threshold = find_copy_on_y_all(y_pred_t, y_true_t, labels, path_saved_g, path_saved_g_smooth)
-    else:
-        count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=params['k'])
+        print('ELBO: ')
+        print(f"Count copy find in training set: {count_train} \n")
+        print(f"Count copy find in validation set: {count_val} \n")
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write('ELBO')
+            filehandle.write(f"Count copy find in training set: {count_train} \n")
+            filehandle.write(f"Count copy find in validation set: {count_val} \n")
 
-    print(f"Count copy find in training set: {count_train} \n")
-    print(f"Count copy find in validation set: {count_val} \n")
+    if params['compute_low_k']:
+        print('LOW@5: ')
+        count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=5)
+        print(f"Count copy find in training set: {count_train} \n")
+        print(f"Count copy find in validation set: {count_val} \n")
 
-    with open(log_file_path, 'a') as filehandle:
-        filehandle.write(f"Count copy find in training set: {count_train} \n")
-        filehandle.write(f"Count copy find in validation set: {count_val} \n")
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write('LOW@5')
+            filehandle.write(f"Count copy find in training set: {count_train} \n")
+            filehandle.write(f"Count copy find in validation set: {count_val} \n")
+
+        print('LOW@10: ')
+        count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=10)
+        print(f"Count copy find in training set: {count_train} \n")
+        print(f"Count copy find in validation set: {count_val} \n")
+
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write('LOW@10')
+            filehandle.write(f"Count copy find in training set: {count_train} \n")
+            filehandle.write(f"Count copy find in validation set: {count_val} \n")
+
 
     return count_train, count_val
 
