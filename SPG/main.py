@@ -109,23 +109,27 @@ def main(fname):
 
             trainer_m = TrainerM(model_m, params)
             trainer_m.train(train_loader_m, val_loader_m)
+        else:
+            model_m = Model(params['n_feats'], params['n_feats'], embed_dim_m, num_heads_m, num_layers_m).to(device)
+            model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
+            model_m = model_m.to(device)
+
 
         if params['train_g']:
-            model_m = Model(params['n_feats'], params['n_feats'], embed_dim_m, num_heads_m, num_layers_m).to(device)
             # train Generator G
             generator = Generator(params['n_feats'], params['n_feats'], embed_dim_g, num_heads_g, num_layers_g).to(
                 device)
 
-            model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
-            model_m = model_m.to(device)
-
             trainer = Trainer(generator, model_m, params)
             trainer.train(dataloader_g)
 
-        if params['test']:
-            model_m = Model(params['n_feats'], params['n_feats'], embed_dim_m, num_heads_m, num_layers_m).to(device)
+        else:
             generator = Generator(params['n_feats'], params['n_feats'], embed_dim_g, num_heads_g, num_layers_g).to(
                 device)
+            generator.load_state_dict(torch.load(params["BEST_PATH_GEN"]))
+            generator = generator.to(device)
+
+        if params['test']:
 
             # test model
             path_y_prediction_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_train_{exp}.dat')
@@ -136,11 +140,6 @@ def main(fname):
             params['path_y_prediction_val'] = path_y_prediction_val
             params['path_y_prediction_g'] = path_y_prediction_g
 
-            model_m.load_state_dict(torch.load(params["BEST_PATH_MOD"]))
-            model_m = model_m.to(device)
-
-            generator.load_state_dict(torch.load(params["BEST_PATH_GEN"]))
-            generator = generator.to(device)
 
             if params['compute_prediction']:
                 test(params, generator, model_m, train_loader_g, val_loader_g)

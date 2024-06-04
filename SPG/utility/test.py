@@ -52,7 +52,7 @@ def test_prompt_generator_all(model, generator, test_loader, params):
             x_g, y_shift_g = x_g.to(device), y_shift_g.to(device)
             y_shift_m, y_m = y_shift_m.to(device), y_m.to(device)
 
-            pred_gen = generator(x_g, y_shift_g)
+            pred_gen = generator.infer(x_g, y_shift_g.shape[1])
             pred_mod = model.infer_m(pred_gen, y_shift_m.shape[1])
 
             loss = criterion(pred_mod, y_m)
@@ -90,7 +90,7 @@ def test_prompt_generator(model, generator, test_loader, params):
             x_g, y_shift_g = x_g.to(device), y_shift_g.to(device)
             y_shift_m, y_m = y_shift_m.to(device), y_m.to(device)
 
-            pred_gen = generator(x_g, y_shift_g)
+            pred_gen = generator.infer(x_g, y_shift_g.shape[1])
             pred_mod = model.infer_m(pred_gen, y_shift_m.shape[1])
 
             loss = criterion(pred_mod, y_m)

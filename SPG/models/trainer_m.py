@@ -35,7 +35,7 @@ class TrainerM:
 
                 x_m, y_shift_m, y_m = x_m.to(self.device), y_shift_m.to(self.device), y_m.to(self.device)
 
-                pred_mod = self.model(x_m, y_shift_m)
+                pred_mod = self.model.infer_m(x_m, y_shift_m.shape[1])
 
                 loss = self.criterion(pred_mod, y_m)
                 count += 1

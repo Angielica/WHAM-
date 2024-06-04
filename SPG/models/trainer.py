@@ -64,12 +64,13 @@ class Trainer:
                 x_g, y_shift_g = x_g.to(self.device), y_shift_g.to(self.device)
                 y_shift_m, y_m = y_shift_m.to(self.device), y_m.to(self.device)
 
-                pred_gen = generator(x_g, y_shift_g)
+                pred_gen = generator.infer(x_g, y_shift_g.shape[1])
                 pred_mod = model.infer_m(pred_gen, y_shift_m.shape[1])
 
                 loss = self.criterion(pred_mod, y_m)
 
                 test_loss += loss.item()
+
                 if count == 0:
                     y_true = y_m.cpu()
                     y_pred = pred_mod.detach().cpu()
