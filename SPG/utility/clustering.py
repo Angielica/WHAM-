@@ -134,7 +134,7 @@ def final_clusters(sequences, params):
 
 
 def create_list_index(cluster_c, dend, params):
-    split_train = params['split_train']
+    split_train = params['perc_split_m']
     log_file_path = params['log_path']
 
     total = 0

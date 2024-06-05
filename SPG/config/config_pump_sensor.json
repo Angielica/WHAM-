@@ -30,6 +30,6 @@
   "compute_stats_sep": 1,
   "compute_low_k": 1,
   "k": 10,
-  "clustering": 0,
+  "clustering": 1,
   "n_gpu": "0"
 }
