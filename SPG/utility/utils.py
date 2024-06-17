@@ -2,12 +2,14 @@ import numpy as np
 
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
+from scipy.stats import genpareto
 
 from utility.clustering import final_clusters, create_list_index
 import pickle
 
 import torch
 from torch.utils.data import TensorDataset, DataLoader
+from operator import itemgetter
 
 import random
 
@@ -187,10 +189,109 @@ class EarlyStopper:
         return False
 
 
+class ReductionData:
+    def __init__(self, patience=1, min_delta=10):
+        self.patience = patience
+        self.min_delta = min_delta
+        self.counter = 0
+        self.min_loss = np.inf
+
+    def condition_data_dropping(self, loss):
+        if loss < (self.min_loss - self.min_delta):
+            self.min_loss = loss
+            self.counter = 0
+        else:
+            self.counter += 1
+
+            if self.counter >= self.patience:
+                self.counter = 0
+                return True
+        return False
 
 
+def check_prompt_generator(model, generator, test_loader, params):
+    device = params['device']
+    criterion = torch.nn.MSELoss(reduction="sum")
+
+    generator.eval()
+    model.eval()
+    test_loss = 0.0
+    count = 0
+    with torch.no_grad():
+        for x_g, y_shift_g, y_shift_m, y_m, label in test_loader:
+
+            x_g, y_shift_g = x_g.to(device), y_shift_g.to(device)
+            y_shift_m, y_m = y_shift_m.to(device), y_m.to(device)
+
+            pred_gen = generator.infer(x_g, y_shift_g.shape[1])
+            pred_mod = model.infer_m(pred_gen, y_shift_m.shape[1])
+
+            loss = criterion(pred_mod, y_m)
+
+            test_loss += loss.item()
+            if count == 0:
+                y_true = y_m.cpu()
+                y_pred = pred_mod.detach().cpu()
+                x_true = x_g.cpu()
+                x_pred = pred_gen.detach().cpu()
+                labels = label
+            else:
+                y_true = torch.cat((y_true, y_m.cpu()))
+                y_pred = torch.cat((y_pred, pred_mod.detach().cpu()))
+                x_true = torch.cat((x_true, x_g.cpu()))
+                x_pred = torch.cat((x_pred, pred_gen.detach().cpu()))
+                labels = torch.cat((labels, label))
+
+            count += 1
+        avg_loss_test = test_loss / count
+
+    return avg_loss_test, y_pred, y_true, x_pred, x_true, labels
 
 
+def eliminate_data(model, generator, dataloader_g, params):
+    log_file_path = params['log_path']
+    n = params['len_training_set']
 
+    avg_loss_test, y_pred, y_true, x_pred, x_true, labels = check_prompt_generator(model, generator,
+                                                                                        dataloader_g, params)
+    error = (y_pred - y_true) ** 2
+    error = error.sum(dim=-1)
+    error = error.sum(dim=-1)
+    error = error.clone().detach().cpu().numpy()
 
+    error_list = list(zip(list(range(len(error))), error, labels.tolist()))
+    error_sorted = sorted(error_list, key=itemgetter(1), reverse=False)
+    error_sorted = np.array(error_sorted)
+    errors_for_fitting = error_sorted[:, 1]
+    shape, loc, scale = genpareto.fit(errors_for_fitting)
 
+    alpha = genpareto.ppf(0.8, shape, loc, scale)
+
+    m = np.searchsorted(errors_for_fitting, alpha)
+
+    if m == len(errors_for_fitting):
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write(f'No reduction needed \n')
+        print("No reduction needed")
+    else:
+        perc = m / n * 100
+
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write(f'Reduction of {100 - perc} % of data \n')
+        print(f'Reduction {100 - perc} % of data')
+
+        if m <= 0.3 * n:
+            m = 0.3 * n
+            m = int(m)
+            params['reduction'] = False
+            perc = m / n * 100
+            with open(log_file_path, 'a') as filehandle:
+                filehandle.write(f'Last reduction of {100 - perc} % of data \n')
+            print(f'Last reduction {100 - perc} % of data')
+
+        selected_indices = error_sorted[:m + 1, 0].astype(int)
+        dataset = dataloader_g.dataset
+        subset_dataset = torch.utils.data.Subset(dataset, selected_indices)
+        dataloader_g = DataLoader(subset_dataset, batch_size=params['batch_size'], shuffle=True)
+
+    return dataloader_g

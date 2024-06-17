@@ -3,8 +3,8 @@ import torch
 
 from time import time
 
-from utility.plotter import plot_loss_training, plot_loss_training_log
-from utility.utils import EarlyStopper
+from SPG.utility.plotter import plot_loss_training, plot_loss_training_log
+from SPG.utility.utils import EarlyStopper, ReductionData, eliminate_data
 
 
 class Trainer:
@@ -90,9 +90,12 @@ class Trainer:
     def train(self, train_loader, early_stop=True):
         self.model.eval()
         n_epochs = self.params["n_epochs_g"]
+        self.params['len_training_set'] = len(train_loader.dataset)
 
         early_stopped = False
         early_stopper = EarlyStopper(patience=30, min_delta=0.0001)
+
+        reduction_data = ReductionData(patience=self.params['patience_reduction'], min_delta=self.params['min_delta_reduction'])
 
         loss_values = []
         best_loss = np.Inf
@@ -136,6 +139,9 @@ class Trainer:
             print(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch} \n')
             with open(self.log_file_path, 'a') as filehandle:
                 filehandle.write(f'End epoch: {epoch+1}, elapsed time: {end_epoch - start_epoch} \n')
+
+            if self.params['reduction'] and reduction_data.condition_data_dropping(current_loss):
+                train_loader = eliminate_data(self.model, self.generator, train_loader, self.params)
 
             if early_stop and early_stopper.early_stop(current_loss):
                 early_stopped = True

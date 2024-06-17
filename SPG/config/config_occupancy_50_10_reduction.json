@@ -1,11 +1,11 @@
 {
-  "dataset_name": "elevator_failure",
-  "dataset_path": "./data/elevator_failure.csv",
+  "dataset_name": "occupancy",
+  "dataset_path": "./data/occupancy.csv",
   "seq_len": 60,
   "seed": 42,
   "perc_split_m": 0.5,
   "split_train": 0.5,
-  "split_val": 0.5,
+  "split_val": 0.1,
   "n_clusters": 10,
   "embed_dim_m": 512,
   "num_heads_m": 8,
@@ -21,10 +21,12 @@
   "clip_grad" : 0.1,
   "n_epochs_m": 1000,
   "n_epochs_g": 500,
-  "train_m": 0,
+  "train_m": 1,
   "train_g": 1,
   "test": 1,
   "reduction" : 1,
+  "patience_reduction" : 10,
+  "min_delta_reduction" : 0.001,
   "compute_prediction": 1,
   "compute_elbow_metric": 1,
   "compute_stats_all": 1,
@@ -32,5 +34,5 @@
   "compute_low_k": 1,
   "k": 10,
   "clustering": 1,
-  "n_gpu": "0"
+  "n_gpu": "1"
 }

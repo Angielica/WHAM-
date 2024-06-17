@@ -4,6 +4,8 @@ import numpy as np
 from kneed import KneeLocator
 from scipy.signal import savgol_filter
 from kneebow.rotor import Rotor
+import pandas as pd
+import seaborn as sns
 
 from operator import itemgetter
 
@@ -32,7 +34,8 @@ def find_low_k_copy(y_pred, y_true, labels, K=5):
 
     return count_train, count_val
 
-def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth):
+
+def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth, path_scatter):
     error = (y_pred - y_true) ** 2
     error = error.sum(dim=-1)
     error = error.sum(dim=-1)
@@ -91,6 +94,26 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth):
     plt.plot(range(0, len(error_list)), threshold * np.ones(len(error_list)), color='red')
     plt.plot(range(0, len(error_list)), smoothed_y, color='orange')
     plt.savefig(path_smooth)
+    plt.show()
+
+    # scatter plot
+    data = {
+        'original_index': [item[0] for item in error_list],
+        'error': [item[1] for item in error_list],
+        'label': [item[2] for item in error_list]
+    }
+
+    df = pd.DataFrame(data)
+    df = df.sort_values(by='error', ascending=False)
+    df['plot_index'] = range(len(df))
+
+    plt.figure(figsize=(20, 15))
+    ax = sns.scatterplot(data=df, x='plot_index', y='error', hue='label', palette='tab10', size=1)
+    ax.set_yscale('log')
+    plt.title('Scatter Plot')
+    plt.xlabel('Index')
+    plt.ylabel('Error')
+    plt.savefig(path_scatter)
     plt.show()
 
     print(f'Threshold: {threshold}')
@@ -336,6 +359,7 @@ def statistics_all(params):
     path_saved_g = params['path_out_log_g']
     path_saved_g_smooth = params['path_out_log_g_smooth']
     log_file_path = params['log_path']
+    path_scatter = params['path_scatter']
 
     with open(path_pred_g, "rb") as f:
         y_pred_t, y_true_t, x_pred_t, x_true_t, labels = pickle.load(f)
@@ -349,7 +373,7 @@ def statistics_all(params):
     count_train, count_val = 0, 0
 
     if params['compute_elbow_metric']:
-        count_train, count_val, threshold = find_copy_on_y_all(y_pred_t, y_true_t, labels, path_saved_g, path_saved_g_smooth)
+        count_train, count_val, threshold = find_copy_on_y_all(y_pred_t, y_true_t, labels, path_saved_g, path_saved_g_smooth, path_scatter)
         print('ELBO: ')
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
