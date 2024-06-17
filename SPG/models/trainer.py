@@ -3,8 +3,8 @@ import torch
 
 from time import time
 
-from SPG.utility.plotter import plot_loss_training, plot_loss_training_log
-from SPG.utility.utils import EarlyStopper, ReductionData, eliminate_data
+from utility.plotter import plot_loss_training, plot_loss_training_log
+from utility.utils import EarlyStopper, ReductionData, eliminate_data
 
 
 class Trainer:
