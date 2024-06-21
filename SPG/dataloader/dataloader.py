@@ -79,7 +79,7 @@ def get_elevator_failure_data(params):
 
 def get_smart_home_data(params):
     path_df = params['dataset_path']
-    df = pd.read_csv(path_df)
+    df = pd.read_csv(path_df, low_memory=False)
     df.drop(columns=['time', 'icon', 'summary', 'cloudCover'], inplace=True)
     df.dropna(inplace=True)
     df.drop_duplicates(inplace=True)
