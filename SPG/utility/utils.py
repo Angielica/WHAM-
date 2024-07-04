@@ -31,6 +31,7 @@ def create_combined_datasets(params, d1, d2):
     seed = params['seed']
     perc_train_split_g = params['split_train']
     perc_val_split_g = params['split_val']
+    log_file_path = params['log_path']
 
     np.random.seed(seed)
 
@@ -90,6 +91,24 @@ def create_combined_datasets(params, d1, d2):
     all_g = torch.Tensor(all_g)
     all_labels_g = torch.Tensor(all_labels_g)
     train_g, val_g = torch.Tensor(train_g), torch.Tensor(val_g)
+
+    with open(log_file_path, 'a') as filehandle:
+        tot_train = train_m.shape
+        tot_val = val_m.shape
+
+        tot_train_G = train_g.shape
+        tot_val_G = val_g.shape
+        filehandle.write(f"Number of elements in training set M: {tot_train} \n")
+        filehandle.write(f"Number of elements in validation set M: {tot_val} \n")
+
+        filehandle.write(f"Number of elements in training set G: {tot_train_G} \n")
+        filehandle.write(f"Number of elements in validation set G: {tot_val_G} \n")
+
+
+    print("Number of elements in training set M:", tot_train, "\n")
+    print("Number of elements in validation set M:", tot_val, "\n")
+    print("Number of elements in training set G:", tot_train_G, "\n")
+    print("Number of elements in validation set G:", tot_val_G, "\n")
 
     return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
