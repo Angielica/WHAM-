@@ -8,6 +8,21 @@ from utility.utils import get_dataloaders
 import sys
 
 def get_data(params):
+    if params['combined']:
+        d1_name, d1_path = params['d1_name'], params['d1_path']
+        d2_name, d2_path = params['d2_name'], params['d2_path']
+        params1 = {'dataset_name': d1_name, 'dataset_path': d1_path}
+        params2 = {'dataset_name': d2_name, 'dataset_path': d2_path}
+
+        d1, _ = get_dataset(params1)
+        d2, _ = get_dataset(params2)
+
+        return get_dataloaders(params, d1, d2)
+    else:
+        df, params = get_dataset(params)
+        return get_dataloaders(params, df)
+
+def get_dataset(params):
     dataset_name = params['dataset_name']
 
     if dataset_name == 'pump_sensor':
@@ -28,7 +43,7 @@ def get_data(params):
         print('Unknown dataset')
         sys.exit(0)
 
-    return get_dataloaders(df, params)
+    return df, params
 
 
 def get_pump_sensor_data(params):

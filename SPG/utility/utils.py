@@ -4,14 +4,18 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from scipy.stats import genpareto
 
-from utility.clustering import final_clusters, create_list_index
+from utility.clustering import final_clusters, create_list_index, generate_cluster_with_em
+
 import pickle
 
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 from operator import itemgetter
 
+import sys
+
 import random
+
 
 
 def set_reproducibility(seed):
@@ -23,6 +27,71 @@ def set_reproducibility(seed):
     torch.use_deterministic_algorithms = True
     torch.backends.cudnn.benchmark = False
 
+def create_combined_datasets(params, d1, d2):
+    seed = params['seed']
+    perc_train_split_g = params['split_train']
+    perc_val_split_g = params['split_val']
+
+    np.random.seed(seed)
+
+    seqs1, n_feats1 = create_sequences(d1, params['seq_len'])
+    seqs2, n_feats2 = create_sequences(d2, params['seq_len'])
+
+    labels1 = generate_cluster_with_em(seqs1, seed)
+    labels2 = generate_cluster_with_em(seqs2, seed)
+
+    train1_idx, val1_idx = np.where(labels1 == 0)[0], np.where(labels1 == 1)[0]
+    train2_idx, val2_idx = np.where(labels2 == 0)[0], np.where(labels2 == 1)[0]
+
+    train1, val1 = seqs1[train1_idx, :, :], seqs1[val1_idx, :, :]
+    train2, val2 = seqs2[train2_idx, :, :], seqs2[val2_idx, :, :]
+
+    if n_feats1 > n_feats2:
+        params['n_feats'] = n_feats1
+        dif = n_feats1 - n_feats2
+        train2 = np.pad(train2, ((0, 0), (0, 0), (0, dif)), 'constant')
+        val2 = np.pad(val2, ((0, 0), (0, 0), (0, dif)), 'constant')
+    elif n_feats2 > n_feats1:
+        params['n_feats'] = n_feats2
+        dif = n_feats2 - n_feats1
+        train1 = np.pad(train1, ((0, 0), (0, 0), (0, dif)), 'constant')
+        val1 = np.pad(val1, ((0, 0), (0, 0), (0, dif)), 'constant')
+    else:
+        params['n_feats'] = n_feats1
+        print('No padding')
+
+    training = np.concatenate((train1, train2), axis=0)
+    validation = np.concatenate((val1, val2), axis=0)
+
+    np.random.shuffle(training)
+    np.random.shuffle(validation)
+
+    min_ = [training[:, :, i].min() for i in range(training.shape[2])]
+    max_ = [training[:, :, i].max() for i in range(training.shape[2])]
+
+    for i in range(training.shape[2]):
+        training[:, :, i] = (training[:, :, i] - min_[i]) / (max_[i] - min_[i])
+        validation[:, :, i] = (validation[:, :, i] - min_[i]) / (max_[i] - min_[i])
+
+    _, train_g = train_test_split(training, test_size=perc_train_split_g, random_state=seed)
+    _, val_g = train_test_split(validation, test_size=perc_val_split_g, random_state=seed)
+
+    labels_train_g = np.ones(train_g.shape[0])
+    labels_val_g = -1 * np.ones(val_g.shape[0])
+
+    all_g = np.concatenate((train_g, val_g))
+    all_labels_g = np.concatenate((labels_train_g, labels_val_g))
+
+    temp = list(zip(all_g, all_labels_g))
+    temp = shuffle(temp, random_state=seed)
+    all_g, all_labels_g = zip(*temp)
+
+    train_m, val_m = torch.Tensor(training), torch.Tensor(validation)
+    all_g = torch.Tensor(all_g)
+    all_labels_g = torch.Tensor(all_labels_g)
+    train_g, val_g = torch.Tensor(train_g), torch.Tensor(val_g)
+
+    return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
 def create_sequences(df, seq_len=60):
     n_feats = df.shape[1]
@@ -140,9 +209,12 @@ def split_sequence(seqs, ratio=.5):
     return x, y_shift, y
 
 
-def get_dataloaders(df, params):
-    sequences, n_feats = create_sequences(df, params['seq_len'])
-    train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets(sequences, params)
+def get_dataloaders(params, df=None, d2=None):
+    if params['combined']:
+        train_m, val_m, all_g, train_g, val_g, all_labels_g = create_combined_datasets(params, df, d2)
+    else:
+        sequences, n_feats = create_sequences(df, params['seq_len'])
+        train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets(sequences, params)
 
     x_train_g, y_shift_train_g, y_train_g = split_sequence(all_g)
 

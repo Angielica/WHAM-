@@ -50,7 +50,12 @@ def main(fname):
     for i in range(params['n_runs']):
         dataset_name = params['dataset_name']
         print(f'Dataset: {dataset_name}')
-        params['seed'] = init_seed + i
+        params['seed'] = init_seed + 1 # FIX ME
+        is_reduction = params['is_reduction']
+        is_combined = params['combined']
+
+        if is_reduction:
+            params['reduction'] = 1
 
         seed = params['seed']
 
@@ -69,11 +74,7 @@ def main(fname):
         embed_dim_m, num_heads_m, num_layers_m = params["embed_dim_m"], params["num_heads_m"], params["num_layers_m"]
         embed_dim_g, num_heads_g, num_layers_g = params["embed_dim_g"], params["num_heads_g"], params["num_layers_g"]
 
-        exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}'
-        red = 0
-        if params['reduction']:
-            red = 1
-            exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction'
+        exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction_{is_reduction}_combined_{is_combined}'
 
         file_path = f'{params["SAVE_FOLDER"]}/results/log_{exp}.txt'
 
@@ -101,7 +102,7 @@ def main(fname):
         params["plot_path_log_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_log_loss_m)
         params['idx_clustering_path'] = os.path.join(params['SAVE_FOLDER'], 'clustering', 'data', idx_clustering_path)
 
-        tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}, reduction: {red}\n'
+        tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}, reduction: {is_reduction}, combined: {is_combined}\n'
         print(tmp)
 
         with open(file_path, 'a') as filehandle:
@@ -177,7 +178,8 @@ def main(fname):
                     filehandle.write(f'SEP G: Copy in train: {count_train}, in val: {count_val}')
 
 if __name__ == '__main__':
-
+    main(sys.argv[1])
+    '''
     all = int(sys.argv[2])
     if all == 2:
         main(sys.argv[1])
@@ -194,8 +196,4 @@ if __name__ == '__main__':
     else:
         print('No config files found')
         sys.exit(0)
-'''
-    main(sys.argv[1])
-
-'''
-
+    '''

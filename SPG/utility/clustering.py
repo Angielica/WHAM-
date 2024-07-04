@@ -11,6 +11,8 @@ from scipy.stats import wasserstein_distance
 import matplotlib.pyplot as plt
 from kneed import KneeLocator
 
+from sklearn.mixture import GaussianMixture
+
 
 def find_num_clusters(sequences, params):
     max = math.ceil(math.sqrt(len(sequences))) 
@@ -171,6 +173,16 @@ def create_list_index(cluster_c, dend, params):
     print("Clusters in validation set", idx_val)
 
     return idx_train, idx_val
+
+
+def generate_cluster_with_em(data, seed):
+    X = data.copy()
+    X = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
+
+    em = GaussianMixture(n_components=2, random_state=seed)
+    labels = em.fit_predict(X)
+
+    return labels
 
 
 
