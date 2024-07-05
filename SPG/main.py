@@ -50,7 +50,7 @@ def main(fname):
     for i in range(params['n_runs']):
         dataset_name = params['dataset_name']
         print(f'Dataset: {dataset_name}')
-        params['seed'] = init_seed + 1 # FIX ME
+        params['seed'] = init_seed + i
         is_reduction = params['is_reduction']
         is_combined = params['combined']
 
