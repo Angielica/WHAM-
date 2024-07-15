@@ -27,6 +27,7 @@
   "train_g": 1,
   "test": 1,
   "reduction" : 0,
+  "is_reduction": 0,
   "patience_reduction" : 2,
   "min_delta_reduction" : 0.001,
   "compute_prediction": 1,
