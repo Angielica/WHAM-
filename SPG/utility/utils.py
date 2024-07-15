@@ -246,13 +246,13 @@ def create_sequences(df, seq_len=60):
     return seqs, n_feats
 
 def create_clusters(seqs, params):
-    labels, cluster_c, dend = final_clusters(seqs, params)
-    idx_train, idx_val = create_list_index(cluster_c, dend, params)
+    labels, cluster, cluster_c = final_clusters(seqs, params)
+    idx_train, idx_val, tot_train, total = create_list_index(cluster, cluster_c, params)
 
     with open(params['idx_clustering_path'], "wb") as f:
         pickle.dump((labels, idx_train, idx_val), f)
 
-    return labels, idx_train, idx_val
+    return labels, idx_train, idx_val, cluster_c, tot_train, total
 
 def create_train_val_sets(seqs, params):
     seed = params['seed']
@@ -270,17 +270,17 @@ def create_train_val_sets(seqs, params):
             train_m, val_m = seqs[idx_train, :, :], seqs[idx_val, :, :]
         else:
             if params['train_m']:
-                labels, idx_train, idx_val = create_clusters(seqs, params)
+                labels, idx_train, idx_val, cluster_c, tot_train, total = create_clusters(seqs, params)
             else:
                 with open(params['idx_clustering_path'], "rb") as f:
                     labels, idx_train, idx_val = pickle.load(f)
 
             train_m_idxs, val_m_idxs = [], []
 
-            for idx in idx_train:
+            for idx in idx_train[0]:
                 train_m_idxs.extend(np.where(labels == idx)[0])
 
-            for idx in idx_val:
+            for idx in idx_val[0]:
                 val_m_idxs.extend(np.where(labels == idx)[0])
 
             train_m, val_m = seqs[train_m_idxs, :, :], seqs[val_m_idxs, :, :]

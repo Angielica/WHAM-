@@ -7,6 +7,7 @@ from scipy.spatial.distance import squareform
 from scipy.cluster.hierarchy import linkage, dendrogram
 
 from scipy.stats import wasserstein_distance
+from scipy.cluster.hierarchy import fcluster
 
 import matplotlib.pyplot as plt
 from kneed import KneeLocator
@@ -50,6 +51,9 @@ def find_num_clusters(sequences, params):
     kl = KneeLocator(range(8, max), sse, curve="convex", direction="decreasing")
 
     cluster_count = kl.elbow
+
+    if cluster_count == None:
+        cluster_count = params['n_clusters']
 
     end_time = time.time() - start_time
 
@@ -132,10 +136,45 @@ def final_clusters(sequences, params):
     plt.savefig(path_dendograms)
     plt.show()
 
-    return labels, cluster_c, dend
+    clusters = fcluster(w_linkage, 2, criterion='maxclust')
+
+    return labels, cluster_c, cluster_c
+
+def create_list_index(clusters, cluster_c, params):
+    log_file_path = params['log_path']
+    tot_train = 0
+    tot_val = 0
+    idx_train = np.where(clusters == 1)
+    idx_val = np.where(clusters == 2)
+
+    for i in range(len(cluster_c)):
+        if i in idx_train[0]:
+            tot_train += cluster_c[i]
+        else:
+            tot_val += cluster_c[i]
+    total = tot_train + tot_val
+
+    if tot_train < 0.3 * total:
+        tmp = idx_train
+        idx_train = idx_val
+        idx_val = tmp
+
+    with open(log_file_path, 'a') as filehandle:
+        filehandle.write(f"Number of elements in training set M: {tot_train} \n")
+        filehandle.write(f"Number of elements in validation set M: {tot_val} \n")
+        filehandle.write(f"Clusters in training set: {idx_train} \n")
+        filehandle.write(f"Clusters in validation set: {idx_val} \n")
+
+    print("Number of elements in training set M:", tot_train, "\n")
+    print("Number of elements in validation set M:", total - tot_train, "\n")
+
+    print("Clusters in training set", idx_train)
+    print("Clusters in validation set", idx_val)
+
+    return idx_train, idx_val, tot_train, total
 
 
-def create_list_index(cluster_c, dend, params):
+def create_list(cluster_c, dend, params):
     split_train = params['perc_split_m']
     log_file_path = params['log_path']
 

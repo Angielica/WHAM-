@@ -53,7 +53,7 @@ def main(fname):
 
     np.random.seed(params["seed"])
 
-    seeds = np.random.randint(17,37179, size=50)[params['init_runs']:params['n_runs']]
+    seeds = np.random.randint(17, 37179, size=50)[params['init_runs']:params['n_runs']]
 
     for i, seed in enumerate(seeds):
         dataset_name = params['dataset_name']
@@ -70,7 +70,6 @@ def main(fname):
         else:
             max_cut_perc = 0
             params['max_cut_perc'] = 0
-
 
         if is_reduction:
             params['reduction'] = 1
