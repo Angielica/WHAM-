@@ -93,9 +93,10 @@ class Trainer:
         self.params['len_training_set'] = len(train_loader.dataset)
 
         early_stopped = False
-        early_stopper = EarlyStopper(patience=30, min_delta=0.0001)
+        early_stopper = EarlyStopper(patience=20, min_delta=0.0001)
 
-        reduction_data = ReductionData(patience=self.params['patience_reduction'], min_delta=self.params['min_delta_reduction'])
+        reduction_data = ReductionData(patience=self.params['patience_reduction'],
+                                       min_delta=self.params['min_delta_reduction'])
 
         loss_values = []
         best_loss = np.Inf

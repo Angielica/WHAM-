@@ -27,7 +27,23 @@ def set_reproducibility(seed):
     torch.use_deterministic_algorithms = True
     torch.backends.cudnn.benchmark = False
 
-def create_combined_datasets(params, d1, d2):
+
+def create_clusters_with_max_cut(sequences, params):
+    perc = params['max_cut_perc']
+    _norm = np.linalg.norm(sequences, axis=(1, 2))
+    indexes = range(0, len(sequences))
+
+    zipped = zip(indexes, _norm)
+    _sorted_norm = sorted(zipped, key=lambda x: x[1])
+
+    train_size = int(len(_sorted_norm) * perc)
+
+    idx_train = [i for i, _ in _sorted_norm[:train_size]]
+    idx_val = [i for i, _ in _sorted_norm[train_size:]]
+
+    return idx_train, idx_val
+
+def create_combined_two_datasets(params, d1, d2):
     seed = params['seed']
     perc_train_split_g = params['split_train']
     perc_val_split_g = params['split_val']
@@ -112,6 +128,110 @@ def create_combined_datasets(params, d1, d2):
 
     return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
+def create_combined_datasets(params, d1, d2, d3):
+    seed = params['seed']
+    perc_split_m = params['perc_split_m']
+    perc_train_split_g = params['split_train']
+    perc_val_split_g = params['split_val']
+    log_file_path = params['log_path']
+
+    np.random.seed(seed)
+
+    # Generate sequences:
+    seqs1, n_feats1 = create_sequences(d1, params['seq_len'])
+    seqs2, n_feats2 = create_sequences(d2, params['seq_len'])
+    seqs3, n_feats3 = create_sequences(d3, params['seq_len'])
+
+    n_feats = max(n_feats1, n_feats2, n_feats3)
+    params['n_feats'] = n_feats
+
+    # Padding:
+    if n_feats != n_feats1:
+        seqs1 = np.pad(seqs1, ((0, 0), (0, 0), (0, n_feats - n_feats1)), 'constant')
+    if n_feats != n_feats2:
+        seqs2 = np.pad(seqs2, ((0, 0), (0, 0), (0, n_feats - n_feats2)), 'constant')
+    if n_feats != n_feats3:
+        seqs3 = np.pad(seqs3, ((0, 0), (0, 0), (0, n_feats - n_feats3)), 'constant')
+
+    # Divide each dataset into train and val sets
+    seq1_train, seq1_val = train_test_split(seqs1, train_size=0.3, random_state=seed)
+    seq2_train, seq2_val = train_test_split(seqs2, train_size=perc_split_m, random_state=seed)
+    seq3_train, _ = train_test_split(seqs3, train_size=perc_split_m, random_state=seed)
+
+    # Create train and val set for M and normalize
+    train_m = np.concatenate((seq1_train, seq2_train), axis=0)
+    val_m = np.concatenate((seq1_val, seq2_val), axis=0)
+
+    np.random.shuffle(train_m)
+    np.random.shuffle(val_m)
+
+    min_ = [train_m[:, :, i].min() for i in range(train_m.shape[2])]
+    max_ = [train_m[:, :, i].max() for i in range(train_m.shape[2])]
+
+    for i in range(train_m.shape[2]):
+        train_m[:, :, i] = (train_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
+        val_m[:, :, i] = (val_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
+
+    # Generate train set for G and normalize
+
+    labels_train_g = np.ones(seq1_train.shape[0])
+    labels_val_g = -1 * np.ones(seq3_train.shape[0])
+
+    all_g = np.concatenate((seq1_train, seq3_train), axis=0)
+    all_labels_g = np.concatenate((labels_train_g, labels_val_g))
+
+    min_ = [all_g[:, :, i].min() for i in range(all_g.shape[2])]
+    max_ = [all_g[:, :, i].max() for i in range(all_g.shape[2])]
+
+
+    for i in range(all_g.shape[2]):
+        if min_[i] == 0. and max_[i] == 0:
+            continue
+        else:
+            all_g[:, :, i] = (all_g[:, :, i] - min_[i]) / (max_[i] - min_[i])
+
+    train_g = all_g[:seq1_train.shape[0]]
+    val_g = all_g[seq1_train.shape[0]:]
+
+    temp = list(zip(all_g, all_labels_g))
+    temp = shuffle(temp, random_state=seed)
+    all_g, all_labels_g = zip(*temp)
+
+    train_m, val_m = torch.Tensor(train_m), torch.Tensor(val_m)
+    all_g = torch.Tensor(all_g)
+    all_labels_g = torch.Tensor(all_labels_g)
+    train_g, val_g = torch.Tensor(train_g), torch.Tensor(val_g)
+
+    with open(log_file_path, 'a') as filehandle:
+        tot_train = train_m.shape
+        tot_val = val_m.shape
+
+        tot_train_G = train_g.shape
+        tot_val_G = val_g.shape
+        filehandle.write(f"Number of elements in training set M: {tot_train} \n")
+        filehandle.write(f"Number of elements in validation set M: {tot_val} \n")
+
+        filehandle.write(f"Number of elements in training set M (seq1): {seq1_train.shape} \n")
+        filehandle.write(f"Number of elements in training set M (seq2): {seq2_train.shape} \n")
+        filehandle.write(f"Number of elements in validation set M (seq1): {seq1_val.shape} \n")
+        filehandle.write(f"Number of elements in validation set M (seq2): {seq2_val.shape} \n")
+
+        filehandle.write(f"Number of elements in training set G (seq1): {tot_train_G} \n")
+        filehandle.write(f"Number of elements in training set G (seq3): {tot_val_G} \n")
+
+
+    print("Number of elements in training set M:", tot_train, "\n")
+    print("Number of elements in validation set M:", tot_val, "\n")
+
+    print(f"Number of elements in training set M (seq1): {seq1_train.shape} \n")
+    print(f"Number of elements in training set M (seq2): {seq2_train.shape} \n")
+    print(f"Number of elements in validation set M (seq1): {seq1_val.shape} \n")
+    print(f"Number of elements in validation set M (seq2): {seq2_val.shape} \n")
+    print("Number of elements in training set G (seq1):", tot_train_G, "\n")
+    print("Number of elements in training set G (seq3):", tot_val_G, "\n")
+
+    return train_m, val_m, all_g, train_g, val_g, all_labels_g
+
 def create_sequences(df, seq_len=60):
     n_feats = df.shape[1]
     n_seqs = df.shape[0]//seq_len
@@ -141,23 +261,29 @@ def create_train_val_sets(seqs, params):
     perc_train_split_g = params['split_train']
     perc_val_split_g = params['split_val']
     clustering = params['clustering']
+    max_cut = params['max_cut']
+    log_file_path = params['log_path']
 
     if clustering:
-        if params['train_m']:
-            labels, idx_train, idx_val = create_clusters(seqs, params)
+        if max_cut:
+            idx_train, idx_val = create_clusters_with_max_cut(seqs, params)
+            train_m, val_m = seqs[idx_train, :, :], seqs[idx_val, :, :]
         else:
-            with open(params['idx_clustering_path'], "rb") as f:
-                labels, idx_train, idx_val = pickle.load(f)
+            if params['train_m']:
+                labels, idx_train, idx_val = create_clusters(seqs, params)
+            else:
+                with open(params['idx_clustering_path'], "rb") as f:
+                    labels, idx_train, idx_val = pickle.load(f)
 
-        train_m_idxs, val_m_idxs = [], []
+            train_m_idxs, val_m_idxs = [], []
 
-        for idx in idx_train:
-            train_m_idxs.extend(np.where(labels == idx)[0])
+            for idx in idx_train:
+                train_m_idxs.extend(np.where(labels == idx)[0])
 
-        for idx in idx_val:
-            val_m_idxs.extend(np.where(labels == idx)[0])
+            for idx in idx_val:
+                val_m_idxs.extend(np.where(labels == idx)[0])
 
-        train_m, val_m = seqs[train_m_idxs, :, :], seqs[val_m_idxs, :, :]
+            train_m, val_m = seqs[train_m_idxs, :, :], seqs[val_m_idxs, :, :]
     else:
         train_m, val_m = train_test_split(seqs, test_size=perc_split_m, random_state=seed)
 
@@ -185,6 +311,23 @@ def create_train_val_sets(seqs, params):
     all_g = torch.Tensor(all_g)
     all_labels_g = torch.Tensor(all_labels_g)
     train_g, val_g = torch.Tensor(train_g), torch.Tensor(val_g)
+
+    with open(log_file_path, 'a') as filehandle:
+        tot_train = train_m.shape
+        tot_val = val_m.shape
+
+        tot_train_G = train_g.shape
+        tot_val_G = val_g.shape
+        filehandle.write(f"Number of elements in training set M: {tot_train} \n")
+        filehandle.write(f"Number of elements in validation set M: {tot_val} \n")
+
+        filehandle.write(f"Number of elements in training set G: {tot_train_G} \n")
+        filehandle.write(f"Number of elements in validation set G: {tot_val_G} \n")
+
+    print("Number of elements in training set M:", tot_train, "\n")
+    print("Number of elements in validation set M:", tot_val, "\n")
+    print("Number of elements in training set G:", tot_train_G, "\n")
+    print("Number of elements in validation set G:", tot_val_G, "\n")
 
     return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
@@ -228,9 +371,9 @@ def split_sequence(seqs, ratio=.5):
     return x, y_shift, y
 
 
-def get_dataloaders(params, df=None, d2=None):
+def get_dataloaders(params, df=None, d2=None, d3=None):
     if params['combined']:
-        train_m, val_m, all_g, train_g, val_g, all_labels_g = create_combined_datasets(params, df, d2)
+        train_m, val_m, all_g, train_g, val_g, all_labels_g = create_combined_datasets(params, df, d2, d3)
     else:
         sequences, n_feats = create_sequences(df, params['seq_len'])
         train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets(sequences, params)

@@ -3,6 +3,8 @@ import sys
 import glob
 import os
 
+import numpy as np
+
 import torch
 
 from dataloader.dataloader import get_data
@@ -19,6 +21,8 @@ def main(fname):
         params = json.load(fp)
 
     init_seed = params['seed']
+    init_max_cut = params['max_cut_perc']
+    incr_max_cut = params['incr_max_cut']
 
     if "CUDA_VISIBLE_DEVICES" not in os.environ:
         os.environ["CUDA_VISIBLE_DEVICES"] = params["n_gpu"]
@@ -29,43 +33,57 @@ def main(fname):
     if not os.path.exists(params["SAVE_FOLDER"]):
         os.mkdir(params["SAVE_FOLDER"])
 
-    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'models')):
-        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'models'))
+    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'models', 'seeds')):
+        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'models', 'seeds'))
 
-    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'plots')):
-        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'plots'))
+    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds')):
+        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds'))
 
-    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'clustering')):
-        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'clustering'))
+    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'clustering', 'seeds')):
+        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'clustering', 'seeds'))
 
-    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'results')):
-        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'results'))
+    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'results', 'seeds')):
+        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'results', 'seeds'))
 
-    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'statistics')):
-        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'statistics'))
+    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds')):
+        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds'))
 
-    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'clustering', 'data')):
-        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'clustering', 'data'))
+    if not os.path.exists(os.path.join(params["SAVE_FOLDER"], 'clustering', 'seeds', 'data')):
+        os.mkdir(os.path.join(params["SAVE_FOLDER"], 'clustering', 'seeds', 'data'))
 
-    for i in range(params['n_runs']):
+    np.random.seed(params["seed"])
+
+    seeds = np.random.randint(17,37179, size=50)[params['init_runs']:params['n_runs']]
+
+    for i, seed in enumerate(seeds):
         dataset_name = params['dataset_name']
         print(f'Dataset: {dataset_name}')
-        params['seed'] = init_seed + i
+        params['seed'] = seed # init_seed * (i+1)
         is_reduction = params['is_reduction']
         is_combined = params['combined']
+
+        max_cut = params['max_cut']
+
+        if max_cut:
+            max_cut_perc = init_max_cut + (i * incr_max_cut)
+            params['max_cut_perc'] = max_cut_perc
+        else:
+            max_cut_perc = 0
+            params['max_cut_perc'] = 0
+
 
         if is_reduction:
             params['reduction'] = 1
 
-        seed = params['seed']
+        # seed = params['seed']
 
         set_reproducibility(seed)
 
-        params['plot_clusters_path'] = os.path.join(params["SAVE_FOLDER"], 'clustering',
+        params['plot_clusters_path'] = os.path.join(params["SAVE_FOLDER"], 'clustering', 'seeds',
                                                     f'clusters_run_{i}_{seed}_{dataset_name}.pdf')
-        params['plot_cluster_distribution_path'] = os.path.join(params["SAVE_FOLDER"], 'clustering',
+        params['plot_cluster_distribution_path'] = os.path.join(params["SAVE_FOLDER"], 'clustering', 'seeds',
                                                     f'cluster_distribution_run_{i}_{seed}_{dataset_name}.pdf')
-        params["path_dendograms"] = os.path.join(params["SAVE_FOLDER"], 'clustering',
+        params["path_dendograms"] = os.path.join(params["SAVE_FOLDER"], 'clustering', 'seeds',
                                                     f'dendograms_run_{i}_{seed}_{dataset_name}.pdf')
 
         perc_split_m = params['perc_split_m']
@@ -74,9 +92,9 @@ def main(fname):
         embed_dim_m, num_heads_m, num_layers_m = params["embed_dim_m"], params["num_heads_m"], params["num_layers_m"]
         embed_dim_g, num_heads_g, num_layers_g = params["embed_dim_g"], params["num_heads_g"], params["num_layers_g"]
 
-        exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction_{is_reduction}_combined_{is_combined}'
+        exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction_{is_reduction}_combined_{is_combined}_max_cut_{max_cut}_max_cut_perc_{max_cut_perc}'
 
-        file_path = f'{params["SAVE_FOLDER"]}/results/log_{exp}.txt'
+        file_path = f'{params["SAVE_FOLDER"]}/results/seeds/log_{exp}.txt'
 
         if params['train_m']:
             open(file_path, 'w').close()
@@ -85,10 +103,10 @@ def main(fname):
         best_path_mod, last_path_mod = f"AI_best_model_{exp}.pt", f"AI_last_model_{exp}.pt"
         best_path_gen, last_path_gen = f"Generator_best_model_{exp}.pt", f"Generator_last_model_{exp}.pt"
 
-        params["BEST_PATH_MOD"] = os.path.join(params["SAVE_FOLDER"], 'models', best_path_mod)
-        params["LAST_PATH_MOD"] = os.path.join(params["SAVE_FOLDER"], 'models', last_path_mod)
-        params["BEST_PATH_GEN"] = os.path.join(params["SAVE_FOLDER"], 'models', best_path_gen)
-        params["LAST_PATH_GEN"] = os.path.join(params["SAVE_FOLDER"], 'models', last_path_gen)
+        params["BEST_PATH_MOD"] = os.path.join(params["SAVE_FOLDER"], 'models', 'seeds', best_path_mod)
+        params["LAST_PATH_MOD"] = os.path.join(params["SAVE_FOLDER"], 'models', 'seeds', last_path_mod)
+        params["BEST_PATH_GEN"] = os.path.join(params["SAVE_FOLDER"], 'models', 'seeds', best_path_gen)
+        params["LAST_PATH_GEN"] = os.path.join(params["SAVE_FOLDER"], 'models', 'seeds', last_path_gen)
 
         plot_path_loss_g = f'loss_generator_{exp}.pdf'
         plot_path_log_loss_g = f'loss_log_generator_{exp}.pdf'
@@ -96,13 +114,13 @@ def main(fname):
         plot_path_log_loss_m = f'loss_log_AI_{exp}.pdf'
         idx_clustering_path = f'idx_clustering_{exp}.dat'
 
-        params["plot_path_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_loss_g)
-        params["plot_path_log_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_log_loss_g)
-        params["plot_path_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_loss_m)
-        params["plot_path_log_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', plot_path_log_loss_m)
-        params['idx_clustering_path'] = os.path.join(params['SAVE_FOLDER'], 'clustering', 'data', idx_clustering_path)
+        params["plot_path_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds', plot_path_loss_g)
+        params["plot_path_log_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds', plot_path_log_loss_g)
+        params["plot_path_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds', plot_path_loss_m)
+        params["plot_path_log_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds', plot_path_log_loss_m)
+        params['idx_clustering_path'] = os.path.join(params['SAVE_FOLDER'], 'clustering', 'seeds', 'data', idx_clustering_path)
 
-        tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}, reduction: {is_reduction}, combined: {is_combined}\n'
+        tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}, reduction: {is_reduction}, combined: {is_combined}, Max Cut: {max_cut}, Max cut perc: {max_cut_perc}\n'
         print(tmp)
 
         with open(file_path, 'a') as filehandle:
@@ -150,15 +168,17 @@ def main(fname):
                 test_all(params, generator, model_m, dataloader_g)
 
             # statistics
-            path_out_log_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_{exp}.pdf')
-            path_out_log_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_{exp}.pdf')
-            path_out_log_g = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_g_{exp}.pdf')
-            path_plot_scatter = os.path.join(params["SAVE_FOLDER"], 'statistics', f'plot_scatter_{exp}.pdf')
+            path_out_log_train = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds', f'out_log_train_{exp}.pdf')
+            path_out_log_val = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds', f'out_log_val_{exp}.pdf')
+            path_out_log_g = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds', f'out_log_g_{exp}.pdf')
+            path_plot_scatter = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds', f'plot_scatter_{exp}.pdf')
 
-            path_out_log_train_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_train_smooth_{exp}.pdf')
-            path_out_log_val_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', f'out_log_val_smooth_{exp}.pdf')
-            path_out_log_g_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics',
-                                                     f'out_log_g_smooth_{exp}.pdf')
+            path_out_log_train_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds',
+                                                     f'out_log_train_smooth_{exp}.pdf')
+            path_out_log_val_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds',
+                                                   f'out_log_val_smooth_{exp}.pdf')
+            path_out_log_g_smooth = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds',
+                                                 f'out_log_g_smooth_{exp}.pdf')
 
             params['path_out_log_train'] = path_out_log_train
             params['path_out_log_val'] = path_out_log_val
@@ -170,8 +190,8 @@ def main(fname):
 
             if params['compute_stats_all']:
                 count_train, count_val = statistics_all(params)
-                # with open(file_path, 'a') as filehandle:
-                #    filehandle.write(f'ALL G: Copy in train: {count_train}, in val: {count_val}')
+                with open(file_path, 'a') as filehandle:
+                    filehandle.write(f'ALL G: Copy in train: {count_train}, in val: {count_val}')
             if params['compute_stats_sep']:
                 count_train, count_val = statistics(params)
                 with open(file_path, 'a') as filehandle:
