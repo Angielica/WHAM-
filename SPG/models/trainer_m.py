@@ -5,6 +5,9 @@ from utility.utils import EarlyStopper
 
 from time import time
 
+from torch.utils.tensorboard import SummaryWriter
+
+
 class TrainerM:
     def __init__(self, model_m, params):
         self.model = model_m
@@ -14,6 +17,10 @@ class TrainerM:
         self.device = self.params["device"]
 
         self.log_file_path = self.params['log_path']
+
+        self.tensorboard_path_m = self.params['tensorboard_path_m']
+
+        self.writer = SummaryWriter(self.tensorboard_path_m)
 
     def train_step(self, x_m, y_shift_m, y_m):
         self.optimizer.zero_grad()
@@ -41,7 +48,7 @@ class TrainerM:
                 count += 1
                 eval_loss += loss.item()
 
-        avg_eval_loss = eval_loss / count
+        avg_eval_loss = eval_loss / len(val_loader)
         return avg_eval_loss
 
     def train(self, train_loader, val_loader, early_stop=True):
@@ -60,51 +67,61 @@ class TrainerM:
         with open(self.log_file_path, 'a') as filehandle:
             filehandle.write(f'Training model M. Starting time: {start_train} \n')
 
-        for epoch in range(n_epochs):
-            start_epoch = time()
-            self.model.train()
-            epoch_loss = 0.0
-            count = 0
-            for x_m, y_shift_m, y_m in train_loader:
+        try:
+            for epoch in range(n_epochs):
+                start_epoch = time()
+                self.model.train()
+                epoch_loss = 0.0
+                count = 0
+                for x_m, y_shift_m, y_m in train_loader:
 
-                x_m, y_shift_m, y_m = x_m.to(self.device), y_shift_m.to(self.device), y_m.to(self.device)
+                    x_m, y_shift_m, y_m = x_m.to(self.device), y_shift_m.to(self.device), y_m.to(self.device)
 
-                loss = self.train_step(x_m, y_shift_m, y_m)
+                    loss = self.train_step(x_m, y_shift_m, y_m)
 
-                count += 1
-                epoch_loss += loss.item()
+                    count += 1
+                    epoch_loss += loss.item()
 
-            loss_values.append(epoch_loss / count)
+                loss_values.append(epoch_loss / len(train_loader))
 
-            tmp_train_print = f"[TRAIN] Epoch [{epoch + 1}/{n_epochs}], epoch_loss/len(train_loader): "f"{(epoch_loss / len(train_loader)):.8f} \n"
-            print(tmp_train_print)
+                tmp_train_print = f"[TRAIN] Epoch [{epoch + 1}/{n_epochs}], epoch_loss/len(train_loader): "f"{(epoch_loss / len(train_loader)):.8f} \n"
+                print(tmp_train_print)
+
+                with open(self.log_file_path, 'a') as filehandle:
+                    filehandle.write(tmp_train_print)
+
+                self.writer.add_scalar('train_loss_m', epoch_loss / len(train_loader), epoch)
+
+                avg_eval_loss = self.evaluate(val_loader)
+                val_loss_values.append(avg_eval_loss)
+
+                self.writer.add_scalar('val_loss_g', avg_eval_loss, epoch)
+
+                if avg_eval_loss < best_loss:
+                    best_loss = avg_eval_loss
+                    torch.save(self.model.state_dict(), self.params["BEST_PATH_MOD"])
+
+                tmp_val_print = f"[VAL] Epoch [{epoch + 1}/{n_epochs}], Eval Loss on val set: {avg_eval_loss:.8f} \n"
+
+                print(tmp_val_print)
+
+                with open(self.log_file_path, 'a') as filehandle:
+                    filehandle.write(tmp_val_print)
+
+                end_epoch = time()
+                print(f'End epoch: {epoch + 1}, elapsed time: {end_epoch - start_epoch}')
+
+                with open(self.log_file_path, 'a') as filehandle:
+                    filehandle.write(f'End epoch: {epoch + 1}, elapsed time: {end_epoch - start_epoch} \n')
+
+                if early_stop and early_stopper.early_stop(avg_eval_loss):
+                    early_stopped = True
+                    break
+        except KeyboardInterrupt:
+            print('Early training stopping due to keyboard interrupt')
 
             with open(self.log_file_path, 'a') as filehandle:
-                filehandle.write(tmp_train_print)
-
-            avg_eval_loss = self.evaluate(val_loader)
-            val_loss_values.append(avg_eval_loss)
-
-            if avg_eval_loss < best_loss:
-                best_loss = avg_eval_loss
-                torch.save(self.model.state_dict(), self.params["BEST_PATH_MOD"])
-
-            tmp_val_print = f"[VAL] Epoch [{epoch + 1}/{n_epochs}], Eval Loss on val set: {avg_eval_loss:.8f} \n"
-
-            print(tmp_val_print)
-
-            with open(self.log_file_path, 'a') as filehandle:
-                filehandle.write(tmp_val_print)
-
-            end_epoch = time()
-            print(f'End epoch: {epoch + 1}, elapsed time: {end_epoch - start_epoch}')
-
-            with open(self.log_file_path, 'a') as filehandle:
-                filehandle.write(f'End epoch: {epoch + 1}, elapsed time: {end_epoch - start_epoch} \n')
-
-            if early_stop and early_stopper.early_stop(avg_eval_loss):
-                early_stopped = True
-                break
+                filehandle.write(f'Early training stopping due to keyboard interrupt \n')
 
         if early_stopped:
             print('Early stopping \n')
