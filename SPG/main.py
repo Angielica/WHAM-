@@ -67,6 +67,7 @@ def main(fname):
         is_combined = params['combined']
 
         max_cut = params['max_cut']
+        only_hc = params['only_hc']
 
         if max_cut:
             max_cut_perc = init_max_cut + (i * incr_max_cut)
@@ -95,7 +96,7 @@ def main(fname):
         embed_dim_m, num_heads_m, num_layers_m = params["embed_dim_m"], params["num_heads_m"], params["num_layers_m"]
         embed_dim_g, num_heads_g, num_layers_g = params["embed_dim_g"], params["num_heads_g"], params["num_layers_g"]
 
-        exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction_{is_reduction}_combined_{is_combined}_max_cut_{max_cut}_max_cut_perc_{max_cut_perc}'
+        exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction_{is_reduction}_combined_{is_combined}_max_cut_{max_cut}_max_cut_perc_{max_cut_perc}_only_hc_{only_hc}'
 
         file_path = f'{params["SAVE_FOLDER"]}/results/seeds/log_{exp}.txt'
         tensorboard_path_m = f'{params["SAVE_FOLDER"]}/logs/tb_M_{exp}'
@@ -128,7 +129,7 @@ def main(fname):
         params["plot_path_log_loss_m"] = os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds', plot_path_log_loss_m)
         params['idx_clustering_path'] = os.path.join(params['SAVE_FOLDER'], 'clustering', 'seeds', 'data', idx_clustering_path)
 
-        tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}, reduction: {is_reduction}, combined: {is_combined}, Max Cut: {max_cut}, Max cut perc: {max_cut_perc}\n'
+        tmp = f'RUN: {i}, SEED: {seed}, DATA: {dataset_name} --> G params: emb_dim, {embed_dim_g}, n_heads, {num_heads_g}, n_layers, {num_layers_g}; M params: emb_dim, {embed_dim_m}, n_heads, {num_heads_m}, n_layers, {num_layers_m}; M split: {perc_split_m}, train_perc: {split_train}, val_perc: {split_val}, reduction: {is_reduction}, combined: {is_combined}, Max Cut: {max_cut}, Max cut perc: {max_cut_perc}, Only HC: {only_hc}\n'
         print(tmp)
 
         with open(file_path, 'a') as filehandle:
