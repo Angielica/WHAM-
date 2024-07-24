@@ -13,6 +13,71 @@ import matplotlib.pyplot as plt
 from kneed import KneeLocator
 
 from sklearn.mixture import GaussianMixture
+from scipy.spatial.distance import cdist
+
+import pickle
+
+def divide_with_hierarchical_clustering(sequences, params):
+    path_dendograms = params["path_dendograms"]
+
+    X = sequences.copy()
+    X = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
+
+    matrix = cdist(X, X, metric=wasserstein_distance)
+    dist_matrix = squareform(matrix)
+
+    w_linkage = linkage(dist_matrix, method="complete")
+    plt.figure(figsize=(15, 5))
+    plt.title("Dendogram of Hierarchical Clustering")
+    dendrogram(w_linkage)
+    plt.savefig(path_dendograms)
+    plt.show()
+
+    search = True
+    i = 2
+    total = X.shape[0]
+    while search:
+        tot = 0
+        tmp = []
+        idx = []
+        n_train = []
+
+        clusters = fcluster(w_linkage, i, criterion='maxclust')
+        for j in range(1, i + 1):
+            tmp.append(len(np.where(clusters == j)[0]))
+            idx.append(np.where(clusters == j))
+        for k in range(len(tmp)):
+            if tmp[k] < 0.4 * total:
+                tot += tmp[k]
+                n_train.append(k + 1)
+                if 0.4 * total <= tot <= 0.6 * total:
+                    search = False
+                    break
+            elif 0.4 * total <= tmp[k] <= 0.6 * total:
+                n_train.append(k + 1)
+                search = False
+                break
+            else:
+                break
+        if search:
+            i += 1
+    n_val = []
+    for t in range(1, i + 1):
+        if t not in n_train:
+            n_val.append(t)
+
+    idx_train = []
+    idx_val = []
+
+    for n in n_train:
+        idx_train.extend(np.where(clusters == n)[0])
+    for m in n_val:
+        idx_val.extend(np.where(clusters == m)[0])
+
+    with open(params['idx_clustering_path'], "wb") as f:
+        pickle.dump((clusters, idx_train, idx_val), f)
+
+    return clusters, idx_train, idx_val
 
 
 def find_num_clusters(sequences, params):
@@ -138,7 +203,7 @@ def final_clusters(sequences, params):
 
     clusters = fcluster(w_linkage, 2, criterion='maxclust')
 
-    return labels, cluster_c, cluster_c
+    return labels, clusters, cluster_c
 
 def create_list_index(clusters, cluster_c, params):
     log_file_path = params['log_path']

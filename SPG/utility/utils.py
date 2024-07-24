@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 from scipy.stats import genpareto
 
-from utility.clustering import final_clusters, create_list_index, generate_cluster_with_em
+from utility.clustering import final_clusters, create_list_index, generate_cluster_with_em, divide_with_hierarchical_clustering
 
 import pickle
 
@@ -370,13 +370,74 @@ def split_sequence(seqs, ratio=.5):
 
     return x, y_shift, y
 
+def create_train_val_sets_with_hc(sequences, params):
+    seed = params['seed']
+    np.random.seed(seed)
+    perc_train_split_g = params['split_train']
+    perc_val_split_g = params['split_val']
+    log_file_path = params['log_path']
+
+    if params['id_run'] == 0:
+        _, idx_train, idx_val = divide_with_hierarchical_clustering(sequences, params)
+    else:
+        with open(params['idx_clustering_path'], "rb") as f:
+            _, idx_train, idx_val = pickle.load(f)
+
+    train_m, val_m = sequences[idx_train, :, :], sequences[idx_val, :, :]
+
+    min_ = [train_m[:, :, i].min() for i in range(train_m.shape[2])]
+    max_ = [train_m[:, :, i].max() for i in range(train_m.shape[2])]
+
+    for i in range(train_m.shape[2]):
+        train_m[:, :, i] = (train_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
+        val_m[:, :, i] = (val_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
+
+    _, train_g = train_test_split(train_m, test_size=perc_train_split_g, random_state=seed)
+    _, val_g = train_test_split(val_m, test_size=perc_val_split_g, random_state=seed)
+
+    labels_train_g = np.ones(train_g.shape[0])
+    labels_val_g = -1 * np.ones(val_g.shape[0])
+
+    all_g = np.concatenate((train_g, val_g))
+    all_labels_g = np.concatenate((labels_train_g, labels_val_g))
+
+    temp = list(zip(all_g, all_labels_g))
+    temp = shuffle(temp, random_state=seed)
+    all_g, all_labels_g = zip(*temp)
+
+    train_m, val_m = torch.Tensor(train_m), torch.Tensor(val_m)
+    all_g = torch.Tensor(all_g)
+    all_labels_g = torch.Tensor(all_labels_g)
+    train_g, val_g = torch.Tensor(train_g), torch.Tensor(val_g)
+
+    with open(log_file_path, 'a') as filehandle:
+        tot_train = train_m.shape
+        tot_val = val_m.shape
+
+        tot_train_G = train_g.shape
+        tot_val_G = val_g.shape
+        filehandle.write(f"Number of elements in training set M: {tot_train} \n")
+        filehandle.write(f"Number of elements in validation set M: {tot_val} \n")
+
+        filehandle.write(f"Number of elements in training set G: {tot_train_G} \n")
+        filehandle.write(f"Number of elements in validation set G: {tot_val_G} \n")
+
+    print("Number of elements in training set M:", tot_train, "\n")
+    print("Number of elements in validation set M:", tot_val, "\n")
+    print("Number of elements in training set G:", tot_train_G, "\n")
+    print("Number of elements in validation set G:", tot_val_G, "\n")
+
+    return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
 def get_dataloaders(params, df=None, d2=None, d3=None):
     if params['combined']:
         train_m, val_m, all_g, train_g, val_g, all_labels_g = create_combined_datasets(params, df, d2, d3)
     else:
         sequences, n_feats = create_sequences(df, params['seq_len'])
-        train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets(sequences, params)
+        if params['only_hc']:
+            train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets_with_hc(sequences, params)
+        else:
+            train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets(sequences, params)
 
     x_train_g, y_shift_train_g, y_train_g = split_sequence(all_g)
 

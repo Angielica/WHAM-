@@ -42,6 +42,8 @@ def get_dataset(params):
         df, params = get_agricultural_data(params)
     elif dataset_name == 'head_posture':
         df, params = get_head_posture_data(params)
+    elif dataset_name == 'pollution':
+        df, params = get_pollution_data(params)
     else:
         print('Unknown dataset')
         sys.exit(0)
@@ -124,6 +126,22 @@ def get_head_posture_data(params):
     df.drop(columns=['Miscare', 'Time'], inplace=True)
     df.dropna(inplace=True)
     df.drop_duplicates(inplace=True)
+
+    params['n_feats'] = df.shape[1]
+
+    return df, params
+
+
+def get_pollution_data(params):
+    path_df = params['dataset_path']
+    df = pd.read_csv(path_df, low_memory=False)
+    df.drop(columns=['Unnamed: 0', 'State Code', 'County Code', 'Site Num', 'Address',
+                          'State', 'County', 'City', 'Date Local', 'NO2 Units', 'O3 Units', 'SO2 Units', 'SO2 AQI',
+                          'CO Units', 'CO AQI'
+                          ], inplace=True)
+    df.dropna(inplace=True)
+    df.drop_duplicates(inplace=True)
+    df = df.iloc[1:].reset_index(drop=True)
 
     params['n_feats'] = df.shape[1]
 

@@ -62,6 +62,7 @@ def main(fname):
         dataset_name = params['dataset_name']
         print(f'Dataset: {dataset_name}')
         params['seed'] = seed # init_seed * (i+1)
+        params['id_run'] = i
         is_reduction = params['is_reduction']
         is_combined = params['combined']
 
