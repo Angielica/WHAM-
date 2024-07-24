@@ -121,7 +121,10 @@ def main(fname):
         plot_path_log_loss_g = f'loss_log_generator_{exp}.pdf'
         plot_path_loss_m = f'loss_AI_{exp}.pdf'
         plot_path_log_loss_m = f'loss_log_AI_{exp}.pdf'
-        idx_clustering_path = f'idx_clustering_{exp}.dat'
+        if only_hc:
+            idx_clustering_path = f'idx_clustering_dataset_{dataset_name}_only_hc_{only_hc}.dat'
+        else:
+            idx_clustering_path = f'idx_clustering_{exp}.dat'
 
         params["plot_path_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds', plot_path_loss_g)
         params["plot_path_log_loss_g"] = os.path.join(params["SAVE_FOLDER"], 'plots', 'seeds', plot_path_log_loss_g)
