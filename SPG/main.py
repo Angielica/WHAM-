@@ -163,9 +163,9 @@ def main(fname):
 
         if params['test']:
             # test model
-            path_y_prediction_train = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_train_{exp}.dat')
-            path_y_prediction_val = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_val_{exp}.dat')
-            path_y_prediction_g = os.path.join(params["SAVE_FOLDER"], 'statistics', f'y_preds_g_{exp}.dat')
+            path_y_prediction_train = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds', f'y_preds_train_{exp}.dat')
+            path_y_prediction_val = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds', f'y_preds_val_{exp}.dat')
+            path_y_prediction_g = os.path.join(params["SAVE_FOLDER"], 'statistics', 'seeds', f'y_preds_g_{exp}.dat')
 
             params['path_y_prediction_train'] = path_y_prediction_train
             params['path_y_prediction_val'] = path_y_prediction_val
