@@ -16,6 +16,8 @@ import sys
 
 import random
 
+from time import time
+
 
 
 def set_reproducibility(seed):
@@ -378,7 +380,13 @@ def create_train_val_sets_with_hc(sequences, params):
     log_file_path = params['log_path']
 
     if params['id_run'] == 0:
+        start = time()
+        print('Starting hierarchical clustering')
         _, idx_train, idx_val = divide_with_hierarchical_clustering(sequences, params)
+        end = time()
+        print(f'Time taken to hierarchical clustering: {end - start} \n')
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write(f"Time taken to hierarchical clustering: {end - start} \n")
     else:
         with open(params['idx_clustering_path'], "rb") as f:
             _, idx_train, idx_val = pickle.load(f)
