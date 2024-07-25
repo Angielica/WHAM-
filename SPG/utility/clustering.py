@@ -23,10 +23,10 @@ def divide_with_hierarchical_clustering(sequences, params):
     X = sequences.copy()
     X = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
 
-    matrix = cdist(X, X, metric=wasserstein_distance)
-    dist_matrix = squareform(matrix)
+    # matrix = cdist(X, X, metric=wasserstein_distance)
+    # dist_matrix = squareform(matrix)
 
-    w_linkage = linkage(dist_matrix, method="complete")
+    w_linkage = linkage(X, method="complete")
     plt.figure(figsize=(15, 5))
     plt.title("Dendogram of Hierarchical Clustering")
     dendrogram(w_linkage)
@@ -47,13 +47,13 @@ def divide_with_hierarchical_clustering(sequences, params):
             tmp.append(len(np.where(clusters == j)[0]))
             idx.append(np.where(clusters == j))
         for k in range(len(tmp)):
-            if tmp[k] < 0.4 * total:
+            if tmp[k] < 0.45 * total:
                 tot += tmp[k]
                 n_train.append(k + 1)
-                if 0.4 * total <= tot <= 0.6 * total:
+                if 0.45 * total <= tot <= 0.55 * total:
                     search = False
                     break
-            elif 0.4 * total <= tmp[k] <= 0.6 * total:
+            elif 0.45 * total <= tmp[k] <= 0.55 * total:
                 n_train.append(k + 1)
                 search = False
                 break
