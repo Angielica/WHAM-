@@ -382,16 +382,16 @@ def create_train_val_sets_with_hc(sequences, params):
     if params['id_run'] == 0:
         start = time()
         print('Starting hierarchical clustering')
-        _, idx_train, idx_val = divide_with_hierarchical_clustering(sequences, params)
+        _, idx_train, idx_val, idx_test = divide_with_hierarchical_clustering(sequences, params)
         end = time()
         print(f'Time taken to hierarchical clustering: {end - start} \n')
         with open(log_file_path, 'a') as filehandle:
             filehandle.write(f"Time taken to hierarchical clustering: {end - start} \n")
     else:
         with open(params['idx_clustering_path'], "rb") as f:
-            _, idx_train, idx_val = pickle.load(f)
+            _, idx_train, idx_val, idx_test = pickle.load(f)
 
-    train_m, val_m = sequences[idx_train, :, :], sequences[idx_val, :, :]
+    train_m, val_m, val_g = sequences[idx_train, :, :], sequences[idx_val, :, :], sequences[idx_test, :, :]
 
     min_ = [train_m[:, :, i].min() for i in range(train_m.shape[2])]
     max_ = [train_m[:, :, i].max() for i in range(train_m.shape[2])]
@@ -399,9 +399,10 @@ def create_train_val_sets_with_hc(sequences, params):
     for i in range(train_m.shape[2]):
         train_m[:, :, i] = (train_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
         val_m[:, :, i] = (val_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
+        val_g[:, :, i] = (val_g[:, :, i] - min_[i]) / (max_[i] - min_[i])
 
     _, train_g = train_test_split(train_m, test_size=perc_train_split_g, random_state=seed)
-    _, val_g = train_test_split(val_m, test_size=perc_val_split_g, random_state=seed)
+    # _, val_g = train_test_split(val_m, test_size=perc_val_split_g, random_state=seed)
 
     labels_train_g = np.ones(train_g.shape[0])
     labels_val_g = -1 * np.ones(val_g.shape[0])

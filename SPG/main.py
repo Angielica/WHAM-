@@ -96,7 +96,7 @@ def main(fname):
         embed_dim_m, num_heads_m, num_layers_m = params["embed_dim_m"], params["num_heads_m"], params["num_layers_m"]
         embed_dim_g, num_heads_g, num_layers_g = params["embed_dim_g"], params["num_heads_g"], params["num_layers_g"]
 
-        exp = f'RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction_{is_reduction}_combined_{is_combined}_max_cut_{max_cut}_max_cut_perc_{max_cut_perc}_only_hc_{only_hc}'
+        exp = f'PG_RUN_{i}_SEED_{seed}_DATA_{dataset_name}_M_{embed_dim_m}_H_{num_heads_m}_L_{num_layers_m}_G_{embed_dim_g}_H_{num_heads_g}_L_{num_layers_g}_SPLIT_M_{perc_split_m}_G_T_{split_train}_V_{split_val}_reduction_{is_reduction}_combined_{is_combined}_max_cut_{max_cut}_max_cut_perc_{max_cut_perc}_only_hc_{only_hc}'
 
         file_path = f'{params["SAVE_FOLDER"]}/results/seeds/log_{exp}.txt'
         tensorboard_path_m = f'{params["SAVE_FOLDER"]}/logs/tb_M_{exp}'

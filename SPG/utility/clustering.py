@@ -17,6 +17,7 @@ from scipy.spatial.distance import cdist
 
 import pickle
 
+
 def divide_with_hierarchical_clustering(sequences, params):
     path_dendograms = params["path_dendograms"]
 
@@ -41,43 +42,82 @@ def divide_with_hierarchical_clustering(sequences, params):
         tmp = []
         idx = []
         n_train = []
+        n_val_m = []
+        n_val_g = []
+        condition = False
 
         clusters = fcluster(w_linkage, i, criterion='maxclust')
         for j in range(1, i + 1):
             tmp.append(len(np.where(clusters == j)[0]))
             idx.append(np.where(clusters == j))
         for k in range(len(tmp)):
-            if tmp[k] < 0.45 * total:
-                tot += tmp[k]
-                n_train.append(k + 1)
-                if 0.45 * total <= tot <= 0.55 * total:
+            if not condition:
+                # print("sono qui", tmp[k])
+                if tmp[k] < 0.30 * total:
+                    tot += tmp[k]
+                    n_train.append(k + 1)
+                    # print("tot",tot)
+                    if 0.30 * total <= tot <= 0.35 * total:
+                        # print("tot 2", tot)
+                        condition = True
+                        tot = 0
+                        # search = False
+                    elif tot > 0.35 * total:
+                        break
+                elif 0.30 * total <= tmp[k] <= 0.35 * total and 0.30 * total <= tot + tmp[k] <= 0.35 * total:
+                    n_train.append(k + 1)
+                    condition = True
+                    tot = 0
+                    # search = False
+                    # break
+                else:
+                    break
+            else:
+                if k == len(tmp) - 1:
+                    break
+                k += 1
+                if tmp[k] < 0.30 * total:
+                    tot += tmp[k]
+                    n_val_m.append(k + 1)
+                    if 0.30 * total <= tot <= 0.35 * total:
+                        search = False
+                        break
+                elif 0.30 * total <= tmp[k] <= 0.35 * total and 0.30 * total <= tot + tmp[k] <= 0.35 * total:
+                    n_val_m.append(k + 1)
                     search = False
                     break
-            elif 0.45 * total <= tmp[k] <= 0.55 * total:
-                n_train.append(k + 1)
-                search = False
-                break
-            else:
-                break
+                else:
+                    break
         if search:
             i += 1
-    n_val = []
+
     for t in range(1, i + 1):
-        if t not in n_train:
-            n_val.append(t)
+        if t not in n_train and t not in n_val_m:
+            n_val_g.append(t)
+
+    # print("i", i)
+    # print("n_train", n_train)
+    # print("total", total)
+    # print("n_val_m", n_val_m)
+    # print("n_val_g", n_val_g)
+    #  print("tmp", tmp)
+    # print("c", clusters)
+    # print("idx", idx)
 
     idx_train = []
-    idx_val = []
-
+    idx_val_m = []
+    idx_val_g = []
     for n in n_train:
         idx_train.extend(np.where(clusters == n)[0])
-    for m in n_val:
-        idx_val.extend(np.where(clusters == m)[0])
+    for m in n_val_m:
+        idx_val_m.extend(np.where(clusters == m)[0])
+    for mm in n_val_g:
+        idx_val_g.extend(np.where(clusters == mm)[0])
 
     with open(params['idx_clustering_path'], "wb") as f:
-        pickle.dump((clusters, idx_train, idx_val), f)
+        pickle.dump((clusters, idx_train, idx_val_m, idx_val_g), f)
 
-    return clusters, idx_train, idx_val
+    return clusters, idx_train, idx_val_m, idx_val_g
 
 
 def find_num_clusters(sequences, params):
