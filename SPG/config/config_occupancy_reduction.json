@@ -44,5 +44,7 @@
   "incr_max_cut": 0.05,
   "min_delta_M": 0.0001,
   "patience_M":  30,
+  "min_delta_G": 0.0001,
+  "patience_G":  30,
   "n_gpu": "1"
 }
