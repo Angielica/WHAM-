@@ -58,7 +58,7 @@ class TrainerM:
         best_loss = np.Inf
 
         early_stopped = False
-        early_stopper = EarlyStopper(patience=30, min_delta=0.0001)
+        early_stopper = EarlyStopper(patience=self.params['patience_M'], min_delta=self.params['min_delta_M'])
 
         start_train = time()
 

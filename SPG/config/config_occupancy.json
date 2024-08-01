@@ -1,7 +1,7 @@
 {
   "dataset_name": "occupancy",
   "dataset_path": "./data/occupancy.csv",
-  "seq_len": 60,
+  "seq_len": 30,
   "seed": 42,
   "perc_split_m": 0.5,
   "split_train": 0.3,
@@ -42,5 +42,7 @@
   "max_cut_perc": 0.4,
   "upper_bound_max_cut": 0.6,
   "incr_max_cut": 0.05,
-  "n_gpu": "2"
+  "min_delta_M": 0.0001,
+  "patience_M":  30,
+  "n_gpu": "1"
 }

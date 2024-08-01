@@ -42,5 +42,7 @@
   "max_cut_perc": 0.4,
   "upper_bound_max_cut": 0.6,
   "incr_max_cut": 0.05,
+  "min_delta_M": 0.0001,
+  "patience_M":  30,
   "n_gpu": "1"
 }

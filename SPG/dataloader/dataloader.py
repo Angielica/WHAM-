@@ -44,6 +44,10 @@ def get_dataset(params):
         df, params = get_head_posture_data(params)
     elif dataset_name == 'pollution':
         df, params = get_pollution_data(params)
+    elif dataset_name == 'climate_big':
+        df, params = get_climate_data(params)
+    elif dataset_name == 'power_consumption':
+        df, params = get_power_consumption_data(params)
     else:
         print('Unknown dataset')
         sys.exit(0)
@@ -142,6 +146,30 @@ def get_pollution_data(params):
     df.dropna(inplace=True)
     df.drop_duplicates(inplace=True)
     df = df.iloc[1:].reset_index(drop=True)
+
+    params['n_feats'] = df.shape[1]
+
+    return df, params
+
+
+def get_climate_data(params):
+    path_df = params['dataset_path']
+    df = pd.read_csv(path_df)
+    df.drop(columns=['Date Time'], inplace=True)
+    df.dropna(inplace=True)
+    df.drop_duplicates(inplace=True)
+
+    params['n_feats'] = df.shape[1]
+
+    return df, params
+
+
+def get_power_consumption_data(params):
+    path_df = params['dataset_path']
+    df = pd.read_csv(path_df)
+    df.drop(columns=['Datetime'], inplace=True)
+    df.dropna(inplace=True)
+    df.drop_duplicates(inplace=True)
 
     params['n_feats'] = df.shape[1]
 
