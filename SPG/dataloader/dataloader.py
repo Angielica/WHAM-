@@ -48,6 +48,8 @@ def get_dataset(params):
         df, params = get_climate_data(params)
     elif dataset_name == 'power_consumption':
         df, params = get_power_consumption_data(params)
+    elif dataset_name == 'weather':
+        df, params = get_weather_data(params)
     else:
         print('Unknown dataset')
         sys.exit(0)
@@ -174,6 +176,22 @@ def get_power_consumption_data(params):
     params['n_feats'] = df.shape[1]
 
     return df, params
+
+def get_weather_data(params):
+    path_df = params['dataset_path']
+
+    to_remove = ['time', 'precipitation (mm)', 'rain (mm)', 'snowfall (cm)', 'cloud_cover (%)',
+                 'cloud_cover_low (%)', 'cloud_cover_mid (%)', 'cloud_cover_high (%)', 'is_Day',
+                 'pressure_msl (hPa)', 'surface_pressure (hPa)', 'vapour_pressure_deficit (kPa)']
+    df = pd.read_csv(path_df)
+    df.drop(columns=to_remove, inplace=True)
+    df.dropna(inplace=True)
+    df.drop_duplicates(inplace=True)
+
+    params['n_feats'] = df.shape[1]
+
+    return df, params
+
 
 
 
