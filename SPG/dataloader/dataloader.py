@@ -105,8 +105,11 @@ def get_elevator_failure_data(params):
 
 def get_smart_home_data(params):
     path_df = params['dataset_path']
+    columns_to_keep = ['temperature', 'apparentTemperature', 'windBearing', 'dewPoint', 'windSpeed']
+
     df = pd.read_csv(path_df, low_memory=False)
-    df.drop(columns=['time', 'icon', 'summary', 'cloudCover'], inplace=True)
+    # df.drop(columns=['time', 'icon', 'summary', 'cloudCover'], inplace=True)
+    df = df[columns_to_keep]
     df.dropna(inplace=True)
     df.drop_duplicates(inplace=True)
 
@@ -185,6 +188,18 @@ def get_weather_data(params):
                  'pressure_msl (hPa)', 'surface_pressure (hPa)', 'vapour_pressure_deficit (kPa)']
     df = pd.read_csv(path_df)
     df.drop(columns=to_remove, inplace=True)
+    df.dropna(inplace=True)
+    df.drop_duplicates(inplace=True)
+
+    params['n_feats'] = df.shape[1]
+
+    return df, params
+
+
+def get_telemetry_data(params):
+    path_df = params['dataset_path']
+    df = pd.read_csv(path_df)
+    df.drop(columns=['datetime', 'machineID'], inplace=True)
     df.dropna(inplace=True)
     df.drop_duplicates(inplace=True)
 
