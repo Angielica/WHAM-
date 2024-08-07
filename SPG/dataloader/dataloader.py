@@ -50,6 +50,8 @@ def get_dataset(params):
         df, params = get_power_consumption_data(params)
     elif dataset_name == 'weather':
         df, params = get_weather_data(params)
+    elif dataset_name == 'telemetry':
+        df, params = get_telemetry_data(params)
     else:
         print('Unknown dataset')
         sys.exit(0)
@@ -199,11 +201,6 @@ def get_weather_data(params):
 def get_telemetry_data(params):
     path_df = params['dataset_path']
     df = pd.read_csv(path_df)
-    df.drop(columns=['datetime', 'machineID'], inplace=True)
-    df.dropna(inplace=True)
-    df.drop_duplicates(inplace=True)
-
-    params['n_feats'] = df.shape[1]
 
     return df, params
 

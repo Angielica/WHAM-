@@ -438,11 +438,37 @@ def create_train_val_sets_with_hc(sequences, params):
 
     return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
+
+def get_telemetry_sequences(df, params):
+    df_groups = df.groupby('machineID')
+
+    sequences, count, n_feats = None, 0, 0
+
+    for _, tmp_df in df_groups:
+        tmp_df = tmp_df.drop(columns=['datetime', 'machineID'])
+        tmp_df = tmp_df.dropna()
+        tmp_df = tmp_df.drop_duplicates()
+
+        seqs, n_feats = create_sequences(tmp_df, seq_len=params['seq_len'])
+
+        if count == 0:
+            sequences = seqs
+        else:
+            sequences = np.concatenate((sequences, seqs))
+
+        count += 1
+
+    return sequences, n_feats
+
 def get_dataloaders(params, df=None, d2=None, d3=None):
     if params['combined']:
         train_m, val_m, all_g, train_g, val_g, all_labels_g = create_combined_datasets(params, df, d2, d3)
     else:
-        sequences, n_feats = create_sequences(df, params['seq_len'])
+        if params['dataset_name'] == 'telemetry':
+            sequences, n_feats = get_telemetry_sequences(df, params)
+            params['n_feats'] = n_feats
+        else:
+            sequences, n_feats = create_sequences(df, params['seq_len'])
         if params['only_hc']:
             train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets_with_hc(sequences, params)
         else:
