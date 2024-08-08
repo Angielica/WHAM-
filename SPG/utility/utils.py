@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
@@ -439,6 +440,72 @@ def create_train_val_sets_with_hc(sequences, params):
     return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
 
+def create_train_val_test_synthetic(params):
+    seed = params['seed']
+    np.random.seed(seed)
+
+    path_train_m = params['path_train_m']
+    path_val_m = params['path_val_m']
+    path_val_g = params['path_val_g']
+    perc_train_split_g = params['split_train']
+    log_file_path = params['log_path']
+
+    train_m_df = pd.read_csv(path_train_m)
+    val_m_df = pd.read_csv(path_val_m)
+    val_g_df = pd.read_csv(path_val_g)
+
+    params['n_feat'] = train_m_df.shape[1]
+
+    train_m, _ = create_sequences(train_m_df, params['seq_len'])
+    val_m, _ = create_sequences(val_m_df, params['seq_len'])
+    val_g, _ = create_sequences(val_g_df, params['seq_len'])
+
+    min_ = [train_m[:, :, i].min() for i in range(train_m.shape[2])]
+    max_ = [train_m[:, :, i].max() for i in range(train_m.shape[2])]
+
+    for i in range(train_m.shape[2]):
+        train_m[:, :, i] = (train_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
+        val_m[:, :, i] = (val_m[:, :, i] - min_[i]) / (max_[i] - min_[i])
+        val_g[:, :, i] = (val_g[:, :, i] - min_[i]) / (max_[i] - min_[i])
+
+    _, train_g = train_test_split(train_m, test_size=perc_train_split_g, random_state=seed)
+
+    labels_train_g = np.ones(train_g.shape[0])
+    labels_val_g = -1 * np.ones(val_g.shape[0])
+
+    all_g = np.concatenate((train_g, val_g))
+    all_labels_g = np.concatenate((labels_train_g, labels_val_g))
+
+    temp = list(zip(all_g, all_labels_g))
+    temp = shuffle(temp, random_state=seed)
+    all_g, all_labels_g = zip(*temp)
+
+    train_m, val_m = torch.Tensor(train_m), torch.Tensor(val_m)
+    all_g = torch.Tensor(all_g)
+    all_labels_g = torch.Tensor(all_labels_g)
+    train_g, val_g = torch.Tensor(train_g), torch.Tensor(val_g)
+
+    with open(log_file_path, 'a') as filehandle:
+        tot_train = train_m.shape
+        tot_val = val_m.shape
+
+        tot_train_G = train_g.shape
+        tot_val_G = val_g.shape
+        filehandle.write(f"Number of elements in training set M: {tot_train} \n")
+        filehandle.write(f"Number of elements in validation set M: {tot_val} \n")
+
+        filehandle.write(f"Number of elements in training set G: {tot_train_G} \n")
+        filehandle.write(f"Number of elements in validation set G: {tot_val_G} \n")
+
+    print("Number of elements in training set M:", tot_train, "\n")
+    print("Number of elements in validation set M:", tot_val, "\n")
+    print("Number of elements in training set G:", tot_train_G, "\n")
+    print("Number of elements in validation set G:", tot_val_G, "\n")
+
+    return train_m, val_m, all_g, train_g, val_g, all_labels_g
+
+
+
 def get_telemetry_sequences(df, params):
     df_groups = df.groupby('machineID')
 
@@ -463,6 +530,8 @@ def get_telemetry_sequences(df, params):
 def get_dataloaders(params, df=None, d2=None, d3=None):
     if params['combined']:
         train_m, val_m, all_g, train_g, val_g, all_labels_g = create_combined_datasets(params, df, d2, d3)
+    elif params['is_synthetic']:
+        train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_test_synthetic(params)
     else:
         if params['dataset_name'] == 'telemetry':
             sequences, n_feats = get_telemetry_sequences(df, params)

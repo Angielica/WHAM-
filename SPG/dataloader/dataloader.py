@@ -21,6 +21,9 @@ def get_data(params):
         d3, _ = get_dataset(params3)
 
         return get_dataloaders(params, d1, d2, d3)
+
+    elif params['is_syntetic']:
+        return get_dataloaders(params)
     else:
         df, params = get_dataset(params)
         return get_dataloaders(params, df)
