@@ -22,7 +22,7 @@ def get_data(params):
 
         return get_dataloaders(params, d1, d2, d3)
 
-    elif params['is_syntetic']:
+    elif params['is_synthetic']:
         return get_dataloaders(params)
     else:
         df, params = get_dataset(params)
@@ -187,10 +187,7 @@ def get_power_consumption_data(params):
 
 def get_weather_data(params):
     path_df = params['dataset_path']
-
-    to_remove = ['time', 'precipitation (mm)', 'rain (mm)', 'snowfall (cm)', 'cloud_cover (%)',
-                 'cloud_cover_low (%)', 'cloud_cover_mid (%)', 'cloud_cover_high (%)', 'is_Day',
-                 'pressure_msl (hPa)', 'surface_pressure (hPa)', 'vapour_pressure_deficit (kPa)']
+    to_remove = ['DataDate', 'DataTime']
     df = pd.read_csv(path_df)
     df.drop(columns=to_remove, inplace=True)
     df.dropna(inplace=True)

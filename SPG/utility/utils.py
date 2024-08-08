@@ -454,7 +454,7 @@ def create_train_val_test_synthetic(params):
     val_m_df = pd.read_csv(path_val_m)
     val_g_df = pd.read_csv(path_val_g)
 
-    params['n_feat'] = train_m_df.shape[1]
+    params['n_feats'] = train_m_df.shape[1]
 
     train_m, _ = create_sequences(train_m_df, params['seq_len'])
     val_m, _ = create_sequences(val_m_df, params['seq_len'])

@@ -1,7 +1,9 @@
 {
-  "dataset_name": "telemetry",
-  "dataset_path": "./data/PdM_telemetry.csv",
-  "seq_len": 168,
+  "dataset_name": "synthetic",
+  "path_train_m" : "./data/synthetic_train_m.csv" ,
+  "path_val_m" : "./data/synthetic_val_m.csv",
+  "path_val_g" : "./data/synthetic_val_g.csv",
+  "seq_len": 30,
   "seed": 42,
   "perc_split_m": 0.5,
   "split_train": 0.3,
@@ -46,6 +48,6 @@
   "patience_M":  30,
   "min_delta_G": 0.001,
   "patience_G":  30,
-  "is_synthetic": 0,
-  "n_gpu": "2"
+  "is_synthetic": 1,
+  "n_gpu": "1"
 }

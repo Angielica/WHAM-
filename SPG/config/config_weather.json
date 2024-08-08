@@ -1,7 +1,7 @@
 {
   "dataset_name": "weather",
-  "dataset_path": "./data/weather.csv",
-  "seq_len": 96,
+  "dataset_path": "./data/weather_era5.csv",
+  "seq_len": 48,
   "seed": 42,
   "perc_split_m": 0.5,
   "split_train": 0.3,
@@ -17,8 +17,8 @@
   "batch_size": 64,
   "init_runs": 0,
   "n_runs": 10,
-  "lr_generator": 0.00001,
-  "lr_model": 0.00001,
+  "lr_generator": 0.0001,
+  "lr_model": 0.0001,
   "clip_grad" : 0.1,
   "n_epochs_m": 1000,
   "n_epochs_g": 500,
@@ -30,7 +30,7 @@
   "reduction" : 0,
   "is_reduction": 0,
   "patience_reduction" : 2,
-  "min_delta_reduction" : 0.001,
+  "min_delta_reduction" : 0.01,
   "compute_prediction": 1,
   "compute_elbow_metric": 1,
   "compute_stats_all": 1,
@@ -42,9 +42,10 @@
   "max_cut_perc": 0.4,
   "upper_bound_max_cut": 0.6,
   "incr_max_cut": 0.05,
-  "min_delta_M": 0.0001,
+  "min_delta_M": 0.001,
   "patience_M":  30,
-  "min_delta_G": 0.0001,
+  "min_delta_G": 0.001,
   "patience_G":  30,
-  "n_gpu": "2"
+  "is_synthetic": 0,
+  "n_gpu": "1"
 }

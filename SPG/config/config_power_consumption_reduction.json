@@ -46,5 +46,6 @@
   "patience_M":  30,
   "min_delta_G": 0.0001,
   "patience_G":  30,
+  "is_synthetic": 0,
   "n_gpu": "3"
 }
