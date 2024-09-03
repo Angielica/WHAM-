@@ -32,7 +32,7 @@ def divide_with_hierarchical_clustering(sequences, params):
     plt.title("Dendogram of Hierarchical Clustering")
     dendrogram(w_linkage)
     plt.savefig(path_dendograms)
-    plt.show()
+    # plt.show()
 
     search = True
     i = 2
@@ -151,7 +151,7 @@ def find_num_clusters(sequences, params):
     plt.xticks(range(8, max))
     plt.xlabel("Number of Clusters")
     plt.ylabel("SSE")
-    plt.show()
+    # plt.show()
 
     kl = KneeLocator(range(8, max), sse, curve="convex", direction="decreasing")
 
@@ -208,7 +208,7 @@ def create_clusters(sequences, cluster_count, params):
             row_i += 1
             column_j = 0
     plt.savefig(path_clusters)
-    plt.show()
+    # plt.show()
 
     cluster_c = [len(labels[labels == i]) for i in range(cluster_count)]
     cluster_n = ["Cluster " + str(i) for i in range(cluster_count)]
@@ -216,7 +216,7 @@ def create_clusters(sequences, cluster_count, params):
     plt.title("Cluster Distribution for KMeans")
     plt.bar(cluster_n, cluster_c)
     plt.savefig(path_distribution)
-    plt.show()
+    # plt.show()
 
     return labels, cluster_c, mean
 
@@ -239,7 +239,7 @@ def final_clusters(sequences, params):
     plt.title("Dendogram of Hierarchical Clustering")
     dend = dendrogram(w_linkage)
     plt.savefig(path_dendograms)
-    plt.show()
+    # plt.show()
 
     clusters = fcluster(w_linkage, 2, criterion='maxclust')
 

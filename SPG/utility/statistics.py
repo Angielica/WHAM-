@@ -41,13 +41,13 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth, path_scatt
     error = error.sum(dim=-1)
     error = error.clone().detach().cpu().numpy()
 
-    print(f'Min error: {error.min()}')
+    # print(f'Min error: {error.min()}')
 
     error_list = list(zip(list(range(len(error))), error, labels.tolist()))
     error_sorted = sorted(error_list, key=itemgetter(1), reverse=True)
     error_sorted = np.array(error_sorted)
 
-    print('Last 10 error: ', error_sorted[-10:])
+    # print('Last 10 error: ', error_sorted[-10:])
 
     y = error_sorted[:, 1]
     labels = error_sorted[:, 2]
@@ -85,7 +85,7 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth, path_scatt
     plt.plot(range(0, len(error_list)), threshold * np.ones(len(error_list)), color='red')
     plt.plot(range(0, len(error_list)), sorted(error_list[:, 1], reverse=True), color='blue')
     plt.savefig(path_err)
-    plt.show()
+    # plt.show()
 
     plt.figure()
     plt.grid()
@@ -94,7 +94,7 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth, path_scatt
     plt.plot(range(0, len(error_list)), threshold * np.ones(len(error_list)), color='red')
     plt.plot(range(0, len(error_list)), smoothed_y, color='orange')
     plt.savefig(path_smooth)
-    plt.show()
+    # plt.show()
 
     # scatter plot
     data = {
@@ -114,7 +114,7 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth, path_scatt
     plt.xlabel('Index')
     plt.ylabel('Error')
     plt.savefig(path_scatter)
-    plt.show()
+    # plt.show()
 
     print(f'Threshold: {threshold}')
     return count_train, count_val, threshold
@@ -126,7 +126,7 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
     error = error.sum(dim=-1)
     error = error.clone().detach().cpu().numpy()
 
-    print(f'Min error: {error.min()}')
+    # print(f'Min error: {error.min()}')
 
     error = np.array(list(zip(range(len(error)), error)))
     count, idx = 0, 0
@@ -134,7 +134,7 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
     y = sorted(error[:, 1], reverse=True)
     x = range(0, len(error))
 
-    print('Last 10 error: ', y[-10:])
+    # print('Last 10 error: ', y[-10:])
 
     window_size = max(5, len(y) // 5)
 
@@ -166,7 +166,7 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
     plt.plot(range(0, len(error)), threshold * np.ones(len(error)), color='red')
     plt.plot(range(0, len(error)), sorted(error[:, 1], reverse=True), color='blue')
     plt.savefig(path_err)
-    plt.show()
+    # plt.show()
 
     plt.figure()
     plt.grid()
@@ -175,7 +175,7 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
     plt.plot(range(0, len(error)), threshold * np.ones(len(error)), color='red')
     plt.plot(range(0, len(error)), smoothed_y, color='orange')
     plt.savefig(path_smooth)
-    plt.show()
+    # plt.show()
 
     print(f'Threshold: {threshold}')
     print(f'COPY: {copy}')
@@ -367,8 +367,8 @@ def statistics_all(params):
     shape_train = len(np.where(labels == 1.)[0])
     shape_val = len(np.where(labels == -1.)[0])
 
-    print(f'Shape y (G): {y_true_t.shape}')
-    print(f'shape D+: {shape_train}, shape D-: {shape_val}')
+    # print(f'Shape y (G): {y_true_t.shape}')
+    # print(f'shape D+: {shape_train}, shape D-: {shape_val}')
 
     count_train, count_val = 0, 0
 
