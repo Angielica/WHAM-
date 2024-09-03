@@ -403,6 +403,16 @@ def statistics_all(params):
             filehandle.write(f"Count copy find in training set: {count_train} \n")
             filehandle.write(f"Count copy find in validation set: {count_val} \n")
 
+        print('LOW@50: ')
+        count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=50)
+        print(f"Count copy find in training set: {count_train} \n")
+        print(f"Count copy find in validation set: {count_val} \n")
+
+        print('LOW@100: ')
+        count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=100)
+        print(f"Count copy find in training set: {count_train} \n")
+        print(f"Count copy find in validation set: {count_val} \n")
+
 
     return count_train, count_val
 
