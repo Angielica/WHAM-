@@ -387,6 +387,7 @@ def statistics_all(params):
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=5)
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
+        print(f'Precision@5: {count_train/5}')
 
         with open(log_file_path, 'a') as filehandle:
             filehandle.write('LOW@5')
@@ -397,6 +398,7 @@ def statistics_all(params):
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=10)
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
+        print(f'Precision@10: {count_train / 10}')
 
         with open(log_file_path, 'a') as filehandle:
             filehandle.write('LOW@10')
@@ -407,11 +409,13 @@ def statistics_all(params):
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=50)
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
+        print(f'Precision@50: {count_train / 50}')
 
         print('LOW@100: ')
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=100)
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
+        print(f'Precision@100: {count_train / 100}')
 
 
     return count_train, count_val
