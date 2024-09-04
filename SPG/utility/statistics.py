@@ -383,12 +383,13 @@ def statistics_all(params):
             filehandle.write(f"Count copy find in validation set: {count_val} \n")
 
     if params['compute_low_k']:
+        tot = int(params['n_el_copyright'])
         print('LOW@5: ')
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=5)
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
         print(f'Precision@5: {count_train/5}')
-        print(f'Recall@5: {count_train / params['n_el_copyright']}')
+        print(f'Recall@5: {count_train / tot}')
 
         with open(log_file_path, 'a') as filehandle:
             filehandle.write('LOW@5')
@@ -400,7 +401,7 @@ def statistics_all(params):
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
         print(f'Precision@10: {count_train / 10}')
-        print(f'Recall@10: {count_train / params['n_el_copyright']}')
+        print(f'Recall@10: {count_train / tot}')
 
         with open(log_file_path, 'a') as filehandle:
             filehandle.write('LOW@10')
@@ -412,14 +413,14 @@ def statistics_all(params):
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
         print(f'Precision@50: {count_train / 50}')
-        print(f'Recall@50: {count_train / params['n_el_copyright']}')
+        print(f'Recall@50: {count_train / tot}')
 
         print('LOW@100: ')
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=100)
         print(f"Count copy find in training set: {count_train} \n")
         print(f"Count copy find in validation set: {count_val} \n")
         print(f'Precision@100: {count_train / 100}')
-        print(f'Recall@100: {count_train / params['n_el_copyright']}')
+        print(f'Recall@100: {count_train / tot}')
 
 
     return count_train, count_val
