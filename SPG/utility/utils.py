@@ -432,6 +432,8 @@ def create_train_val_sets_with_hc(sequences, params):
         filehandle.write(f"Number of elements in training set G: {tot_train_G} \n")
         filehandle.write(f"Number of elements in validation set G: {tot_val_G} \n")
 
+    params['n_el_copyright'] = tot_train_G
+
     print("Number of elements in training set M:", tot_train, "\n")
     print("Number of elements in validation set M:", tot_val, "\n")
     print("Number of elements in training set G:", tot_train_G, "\n")
