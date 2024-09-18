@@ -395,6 +395,8 @@ def statistics_all(params):
             filehandle.write('LOW@5')
             filehandle.write(f"Count copy find in training set: {count_train} \n")
             filehandle.write(f"Count copy find in validation set: {count_val} \n")
+            filehandle.write(f"Precision@5: {count_train/5}")
+            filehandle.write(f"Recall@5: {count_train / tot}")
 
         print('LOW@10: ')
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=10)
@@ -407,6 +409,9 @@ def statistics_all(params):
             filehandle.write('LOW@10')
             filehandle.write(f"Count copy find in training set: {count_train} \n")
             filehandle.write(f"Count copy find in validation set: {count_val} \n")
+            filehandle.write(f"Precision@10: {count_train / 10}")
+            filehandle.write(f"Recall@10: {count_train / tot}")
+
 
         print('LOW@50: ')
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=50)
@@ -415,6 +420,13 @@ def statistics_all(params):
         print(f'Precision@50: {count_train / 50}')
         print(f'Recall@50: {count_train / tot}')
 
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write('LOW@50')
+            filehandle.write(f"Count copy find in training set: {count_train} \n")
+            filehandle.write(f"Count copy find in validation set: {count_val} \n")
+            filehandle.write(f"Precision@50: {count_train / 50}")
+            filehandle.write(f"Recall@50: {count_train / tot}")
+
         print('LOW@100: ')
         count_train, count_val = find_low_k_copy(y_pred_t, y_true_t, labels, K=100)
         print(f"Count copy find in training set: {count_train} \n")
@@ -422,6 +434,12 @@ def statistics_all(params):
         print(f'Precision@100: {count_train / 100}')
         print(f'Recall@100: {count_train / tot}')
 
+        with open(log_file_path, 'a') as filehandle:
+            filehandle.write('LOW@100')
+            filehandle.write(f"Count copy find in training set: {count_train} \n")
+            filehandle.write(f"Count copy find in validation set: {count_val} \n")
+            filehandle.write(f"Precision@50: {count_train / 100}")
+            filehandle.write(f"Recall@50: {count_train / tot}")
 
     return count_train, count_val
 
