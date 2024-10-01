@@ -1,5 +1,5 @@
 
-This is the accompanying code for the project "Copyright Protection for Sequence Data"
+This is the accompanying code for the paper **CAP: A Prompt Generation Mechanisms for Detecting Unauthorized Data Usage in Generative Models**
 
 The repository contains all code to re-execute our models.
 
