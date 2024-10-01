@@ -24,9 +24,6 @@ def divide_with_hierarchical_clustering(sequences, params):
     X = sequences.copy()
     X = X.reshape(X.shape[0], X.shape[1] * X.shape[2])
 
-    # matrix = cdist(X, X, metric=wasserstein_distance)
-    # dist_matrix = squareform(matrix)
-
     w_linkage = linkage(X, method="complete")
     plt.figure(figsize=(15, 5))
     plt.title("Dendogram of Hierarchical Clustering")
@@ -52,24 +49,18 @@ def divide_with_hierarchical_clustering(sequences, params):
             idx.append(np.where(clusters == j))
         for k in range(len(tmp)):
             if not condition:
-                # print("sono qui", tmp[k])
                 if tmp[k] < 0.30 * total:
                     tot += tmp[k]
                     n_train.append(k + 1)
-                    # print("tot",tot)
                     if 0.30 * total <= tot <= 0.35 * total:
-                        # print("tot 2", tot)
                         condition = True
                         tot = 0
-                        # search = False
                     elif tot > 0.35 * total:
                         break
                 elif 0.30 * total <= tmp[k] <= 0.35 * total and 0.30 * total <= tot + tmp[k] <= 0.35 * total:
                     n_train.append(k + 1)
                     condition = True
                     tot = 0
-                    # search = False
-                    # break
                 else:
                     break
             else:
@@ -94,15 +85,6 @@ def divide_with_hierarchical_clustering(sequences, params):
     for t in range(1, i + 1):
         if t not in n_train and t not in n_val_m:
             n_val_g.append(t)
-
-    # print("i", i)
-    # print("n_train", n_train)
-    # print("total", total)
-    # print("n_val_m", n_val_m)
-    # print("n_val_g", n_val_g)
-    #  print("tmp", tmp)
-    # print("c", clusters)
-    # print("idx", idx)
 
     idx_train = []
     idx_val_m = []
@@ -136,15 +118,13 @@ def find_num_clusters(sequences, params):
     for num_clusters in range_n_clusters:
         km = TimeSeriesKMeans(n_clusters=num_clusters, metric="dtw", random_state=seed)
         labels = km.fit_predict(sequences)
-        # cluster_c = [len(labels[labels == i]) for i in range(num_clusters)]
-        # cluster_labels = km.labels_
         inertia = km.inertia_
         sse.append(inertia)
 
         with open(log_file_path, 'a') as filehandle:
-            filehandle.write("Per n_clusters = {0}, il coefficiente di inertia è pari a {1} \n".format(num_clusters, inertia))
+            filehandle.write("Per n_clusters = {0}, inertia coefficient equal to {1} \n".format(num_clusters, inertia))
 
-        print("Per n_clusters = {0}, il coefficiente di inertia è pari a {1} \n".format(num_clusters, inertia))
+        print("Per n_clusters = {0}, inertia coefficient equal to {1} \n".format(num_clusters, inertia))
 
     plt.style.use("fivethirtyeight")
     plt.plot(range(8, max), sse)

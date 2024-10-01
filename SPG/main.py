@@ -61,7 +61,7 @@ def main(fname):
     for i, seed in enumerate(seeds):
         dataset_name = params['dataset_name']
         print(f'Dataset: {dataset_name}')
-        params['seed'] = seed # init_seed * (i+1)
+        params['seed'] = seed
         params['id_run'] = i
         is_reduction = params['is_reduction']
         is_combined = params['combined']
@@ -211,21 +211,3 @@ def main(fname):
 
 if __name__ == '__main__':
     main(sys.argv[1])
-    '''
-    all = int(sys.argv[2])
-    if all == 2:
-        main(sys.argv[1])
-    elif all == 0:
-        directory_json = "config/"
-        files = glob.glob(directory_json + "*.json")
-        for file in files:
-            main(file)
-    elif all == 1:
-        directory_json = "config_1/"
-        files = glob.glob(directory_json + "*.json")
-        for file in files:
-            main(file)
-    else:
-        print('No config files found')
-        sys.exit(0)
-    '''

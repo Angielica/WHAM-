@@ -1,9 +1,9 @@
 {
-  "dataset_name": "synthetic",
-  "path_train_m" : "./data/synthetic_overlap_new_train_m.csv" ,
-  "path_val_m" : "./data/synthetic_overlap_new_val_m.csv",
-  "path_val_g" : "./data/synthetic_overlap_new_val_g.csv",
-  "seq_len": 30,
+  "dataset_name": "synthetic_patterns",
+  "path_train_m" : "./data/synthetic_patterns_train_m.csv" ,
+  "path_val_m" : "./data/synthetic_patterns_val_m.csv",
+  "path_val_g" : "./data/synthetic_patterns_val_g.csv",
+  "seq_len": 60,
   "seed": 42,
   "perc_split_m": 0.5,
   "split_train": 0.3,
@@ -49,5 +49,5 @@
   "min_delta_G": 0.001,
   "patience_G":  30,
   "is_synthetic": 1,
-  "n_gpu": "3"
+  "n_gpu": "2"
 }

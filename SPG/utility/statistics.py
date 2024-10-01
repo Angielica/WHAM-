@@ -41,13 +41,9 @@ def find_copy_on_y_all(y_pred, y_true, labels, path_err, path_smooth, path_scatt
     error = error.sum(dim=-1)
     error = error.clone().detach().cpu().numpy()
 
-    # print(f'Min error: {error.min()}')
-
     error_list = list(zip(list(range(len(error))), error, labels.tolist()))
     error_sorted = sorted(error_list, key=itemgetter(1), reverse=True)
     error_sorted = np.array(error_sorted)
-
-    # print('Last 10 error: ', error_sorted[-10:])
 
     y = error_sorted[:, 1]
     labels = error_sorted[:, 2]
@@ -126,15 +122,11 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
     error = error.sum(dim=-1)
     error = error.clone().detach().cpu().numpy()
 
-    # print(f'Min error: {error.min()}')
-
     error = np.array(list(zip(range(len(error)), error)))
     count, idx = 0, 0
 
     y = sorted(error[:, 1], reverse=True)
     x = range(0, len(error))
-
-    # print('Last 10 error: ', y[-10:])
 
     window_size = max(5, len(y) // 5)
 
@@ -183,8 +175,6 @@ def find_copy_on_y(y_pred, y_true, train, threshold, path_err, path_smooth):
 
 
 def find_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
-    # print(y_pred.shape)
-    # print(x_pred.shape)
     error = (y_pred - y_true) ** 2
     error = error.sum(dim=-1)
     error = error.sum(dim=-1)
@@ -199,23 +189,8 @@ def find_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
                          direction="decreasing")
         threshold = kl.elbow
 
-    # print("threshold", threshold)
-    # th = threshold * np.ones(len(error))
-    
-    # for err in error:
-    #     if err[-1] >= threshold:
-    #         count += 1
-    #         tmp_error = ((x_pred[idx] - x_true[idx]) ** 2).sum(dim=-1)
-    #         tmp_error = tmp_error.sum(dim=-1)
-    #         error_x.append(tmp_error)
-    #     idx += 1
-
     error = sorted(error, key=lambda a: a[1])
     error = np.array(error)
-
-    # print(error[:10])
-    # tmp_true = y_true[error[:2,0]][0][0]
-    # tmp_pred = y_pred[error[:2,0]][0][0]
 
     count = 0
     sort = sorted(error[:, 1], reverse=True)
@@ -228,25 +203,17 @@ def find_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
         if err <= th:
             count += 1
 
-    # print("y true\n", y_true[error[:2,0]][0][0][:10])
-    # print("y pred\n", y_pred[error[:2,0]][0][0][:10])
-    # print(((tmp_true - tmp_pred)**2).sum())
-
     plt.figure()
     plt.grid()
     plt.yscale("log")
     plt.plot(range(0, len(error)), th * np.ones(len(error)), color='red')
     plt.plot(range(0, len(error)), sorted(error[:, 1], reverse=True), color='blue')
-  
-    #plt.axvline(threshold, ymin=min(sorted(error[:, 1], reverse=True)), ymax=max(sorted(error[:, 1], reverse=True)))
     plt.savefig(path)
 
     return count, error_x, th
 
 
 def find_k_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
-    # print(y_pred.shape)
-    # print(x_pred.shape)
     error = (y_pred - y_true) ** 2
     error = error.sum(dim=-1)
     error = error.sum(dim=-1)
@@ -256,23 +223,8 @@ def find_k_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
     count, idx = 0, 0
     error_x = []
 
-    # print("threshold", threshold)
-    # th = threshold * np.ones(len(error))
-
-    # for err in error:
-    #     if err[-1] >= threshold:
-    #         count += 1
-    #         tmp_error = ((x_pred[idx] - x_true[idx]) ** 2).sum(dim=-1)
-    #         tmp_error = tmp_error.sum(dim=-1)
-    #         error_x.append(tmp_error)
-    #     idx += 1
-
     error = sorted(error, key=lambda a: a[1])
     error = np.array(error)
-
-    # print(error[:10])
-    # tmp_true = y_true[error[:2,0]][0][0]
-    # tmp_pred = y_pred[error[:2,0]][0][0]
 
     th_vec = []
     count_train = []
@@ -303,17 +255,11 @@ def find_k_copy(y_pred, y_true, x_pred, x_true, train, threshold, path):
 
     print("threshold", th_vec)
 
-    # print("y true\n", y_true[error[:2,0]][0][0][:10])
-    # print("y pred\n", y_pred[error[:2,0]][0][0][:10])
-    # print(((tmp_true - tmp_pred)**2).sum())
-
     plt.figure()
     plt.grid()
     plt.yscale("log")
     plt.plot(range(0, len(error)), th * np.ones(len(error)), color='red')
     plt.plot(range(0, len(error)), sorted(error[:, 1], reverse=True), color='blue')
-
-    # plt.axvline(threshold, ymin=min(sorted(error[:, 1], reverse=True)), ymax=max(sorted(error[:, 1], reverse=True)))
     plt.savefig(path)
 
     return count, error_x, th_vec
@@ -366,9 +312,6 @@ def statistics_all(params):
 
     shape_train = len(np.where(labels == 1.)[0])
     shape_val = len(np.where(labels == -1.)[0])
-
-    # print(f'Shape y (G): {y_true_t.shape}')
-    # print(f'shape D+: {shape_train}, shape D-: {shape_val}')
 
     count_train, count_val = 0, 0
 
@@ -438,8 +381,8 @@ def statistics_all(params):
             filehandle.write('LOW@100')
             filehandle.write(f"Count copy find in training set: {count_train} \n")
             filehandle.write(f"Count copy find in validation set: {count_val} \n")
-            filehandle.write(f"Precision@50: {count_train / 100}")
-            filehandle.write(f"Recall@50: {count_train / tot}")
+            filehandle.write(f"Precision@100: {count_train / 100}")
+            filehandle.write(f"Recall@100: {count_train / tot}")
 
     return count_train, count_val
 

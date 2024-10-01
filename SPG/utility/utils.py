@@ -336,33 +336,6 @@ def create_train_val_sets(seqs, params):
 
 
 def split_sequence(seqs, ratio=.5):
-    """Splits a sequence into 2 (3) parts, as is required by our transformer
-    model.
-
-    Assume our sequence length is L, we then split this into src of length N
-    and tgt_y of length M, with N + M = L.
-    src, the first part of the input sequence, is the input to the encoder, and we
-    expect the decoder to predict tgt_y, the second part of the input sequence.
-    In addition, we generate tgt, which is tgt_y but "shifted left" by one - i.e. it
-    starts with the last token of src, and ends with the second-last token in tgt_y.
-    This sequence will be the input to the decoder.
-
-
-    Args:
-        seqs: batched input sequences to split [bs, seq_len, num_features]
-        ratio: split ratio, N = ratio * L
-
-    Returns:
-        tuple[torch.Tensor, torch.Tensor, torch.Tensor]: src, tgt, tgt_y
-    """
-    # x = (0,1,2,3)
-    # y = (4,5,6,7)
-    # tgt = (3,4,5,6)
-
-    # y = (4,5,6,7)
-    # x = (0,1,2,3)
-    # tgt = (4,3,2,1)
-
     x_end = int(seqs.shape[1] * ratio)
     # [bs, src_seq_len, num_features]
     x = seqs[:, :x_end]
@@ -508,40 +481,13 @@ def create_train_val_test_synthetic(params):
 
     return train_m, val_m, all_g, train_g, val_g, all_labels_g
 
-
-
-def get_telemetry_sequences(df, params):
-    df_groups = df.groupby('machineID')
-
-    sequences, count, n_feats = None, 0, 0
-
-    for _, tmp_df in df_groups:
-        tmp_df = tmp_df.drop(columns=['datetime', 'machineID'])
-        tmp_df = tmp_df.dropna()
-        tmp_df = tmp_df.drop_duplicates()
-
-        seqs, n_feats = create_sequences(tmp_df, seq_len=params['seq_len'])
-
-        if count == 0:
-            sequences = seqs
-        else:
-            sequences = np.concatenate((sequences, seqs))
-
-        count += 1
-
-    return sequences, n_feats
-
 def get_dataloaders(params, df=None, d2=None, d3=None):
     if params['combined']:
         train_m, val_m, all_g, train_g, val_g, all_labels_g = create_combined_datasets(params, df, d2, d3)
     elif params['is_synthetic']:
         train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_test_synthetic(params)
     else:
-        if params['dataset_name'] == 'telemetry':
-            sequences, n_feats = get_telemetry_sequences(df, params)
-            params['n_feats'] = n_feats
-        else:
-            sequences, n_feats = create_sequences(df, params['seq_len'])
+        sequences, n_feats = create_sequences(df, params['seq_len'])
         if params['only_hc']:
             train_m, val_m, all_g, train_g, val_g, all_labels_g = create_train_val_sets_with_hc(sequences, params)
         else:
